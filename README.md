@@ -2,9 +2,7 @@
 
 Track other players' locations on your experience bar like a compass!
 
-<img alt="Requires Cloth Config API" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/requires/cloth-config-api_vector.svg">
-<img alt="Requires Fabric API" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/requires/fabric-api_vector.svg">
-<img alt="Requires Fabric Langauge Kotlin" height="56" src="requires_kotlin.svg">
+<img alt="Requires Cloth Config API" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/requires/cloth-config-api_vector.svg"> <img alt="Requires Fabric API" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/requires/fabric-api_vector.svg"> <img alt="Requires Fabric Langauge Kotlin" height="56" src="requires_kotlin.svg">
 
 ![Screenshot of the player locator](screenshot1.png)
 
