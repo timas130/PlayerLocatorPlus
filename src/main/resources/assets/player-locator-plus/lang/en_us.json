@@ -18,6 +18,9 @@
   "text.autoconfig.player-locator-plus.option.visible.@Tooltip": "Whether the markers are shown on the client",
   "text.autoconfig.player-locator-plus.option.fadeMarkers": "Fade markers",
   "text.autoconfig.player-locator-plus.option.fadeMarkers.@Tooltip": "Decrease markers' opacity when you're far from another player",
+  "text.autoconfig.player-locator-plus.option.fadeStart": "Minimum fade distance",
+  "text.autoconfig.player-locator-plus.option.fadeEnd": "Maximum fade distance",
+  "text.autoconfig.player-locator-plus.option.fadeEndOpacity": "Minimum fade opacity (0 to 1)",
   "text.autoconfig.player-locator-plus.option.showHeight": "Show height difference",
   "text.autoconfig.player-locator-plus.option.showHeight.@Tooltip": "Show a little up or down arrow near a marker when the difference in height is significant."
 }

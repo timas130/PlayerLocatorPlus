@@ -11,6 +11,7 @@ import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import org.joml.Vector2d
+import sh.sit.plp.PlayerLocatorPlus.config
 import sh.sit.plp.network.PlayerLocationsS2CPayload
 import sh.sit.plp.network.RelativePlayerLocation
 import java.util.*
@@ -56,7 +57,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     }
 
     fun render(context: DrawContext, tickCounter: RenderTickCounter) {
-        if (!PlayerLocatorPlus.config.visible) return
+        if (!config.visible) return
 
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
@@ -103,8 +104,10 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 continue
             }
 
-            val opacity = if (PlayerLocatorPlus.config.fadeMarkers) {
-                (((700.0 - position.distance) / 700.0).coerceIn(0.3, 1.0) * 255).roundToInt()
+            val opacity = if (config.fadeMarkers) {
+                val dist = position.distance.coerceIn(config.fadeStart.toFloat(), config.fadeEnd.toFloat())
+                val fadeProgress = 1 - (dist - config.fadeStart) / (config.fadeEnd - config.fadeStart)
+                (((1 - config.fadeEndOpacity) * fadeProgress + config.fadeEndOpacity) * 255).roundToInt()
             } else {
                 255
             }
@@ -121,7 +124,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 /* color = */ color,
             )
 
-            if (PlayerLocatorPlus.config.showHeight) {
+            if (config.showHeight) {
                 val heightDiffNormalized = direction.normalize().y
                 if (heightDiffNormalized > 0.5) { // about 45 deg
                     context.drawGuiTexture(

@@ -19,7 +19,7 @@ class ModConfig : ConfigData {
     var directionPrecision = 300f
     @ConfigEntry.Category("general")
     @ConfigEntry.Gui.Tooltip
-    var ticksBetweenUpdates = 10
+    var ticksBetweenUpdates = 5
     @ConfigEntry.Category("general")
     var sneakingHides = true
     @ConfigEntry.Category("general")
@@ -34,6 +34,39 @@ class ModConfig : ConfigData {
     @ConfigEntry.Gui.Tooltip
     var fadeMarkers = true
     @ConfigEntry.Category("style")
+    var fadeStart = 100
+    @ConfigEntry.Category("style")
+    var fadeEnd = 1000
+    @ConfigEntry.Category("style")
+    var fadeEndOpacity = 0.3f
+    @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var showHeight = true
+
+    override fun validatePostLoad() {
+        if (fadeStart < 0) {
+            PlayerLocatorPlus.logger.warn("invalid config: fadeStart < 0")
+            fadeStart = 0
+        }
+        if (fadeEnd < 1 || fadeEnd <= fadeStart) {
+            PlayerLocatorPlus.logger.warn("invalid config: fadeEnd < 1 or fadeEnd <= fadeStart")
+            fadeEnd = fadeStart + 1
+        }
+        if (fadeEndOpacity < 0 || fadeEndOpacity > 1) {
+            PlayerLocatorPlus.logger.warn("invalid config: fadeEndOpacity not in [0, 1]")
+            fadeEndOpacity = 0.3f
+        }
+        if (ticksBetweenUpdates < 0) {
+            PlayerLocatorPlus.logger.warn("invalid config: ticksBetweenUpdates < 0")
+            ticksBetweenUpdates = 0
+        }
+        if (directionPrecision <= 1) {
+            PlayerLocatorPlus.logger.warn("invalid config: directionPrecision <= 1")
+            directionPrecision = 300f
+        }
+        if (maxDistance < 0) {
+            PlayerLocatorPlus.logger.warn("invalid config: maxDistance < 0")
+            maxDistance = 0
+        }
+    }
 }
