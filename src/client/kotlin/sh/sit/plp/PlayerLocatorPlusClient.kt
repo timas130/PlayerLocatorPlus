@@ -51,7 +51,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         }
 
         HudLayerRegistrationCallback.EVENT.register(HudLayerRegistrationCallback { drawer ->
-            drawer.attachLayerAfter(IdentifiedLayer.EXPERIENCE_LEVEL, PLAYER_LOCATOR_LAYER, ::render)
+            drawer.attachLayerBefore(IdentifiedLayer.EXPERIENCE_LEVEL, PLAYER_LOCATOR_LAYER, ::render)
         })
     }
 
