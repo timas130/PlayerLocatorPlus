@@ -160,6 +160,7 @@ object BarUpdater {
                 (config.sneakingHides && it.isSneaking) ||
                 (config.pumpkinHides && !LivingEntity.NOT_WEARING_GAZE_DISGUISE_PREDICATE.test(it)) ||
                 (config.invisibilityHides && it.hasStatusEffect(StatusEffects.INVISIBILITY)) ||
+                it.isSpectator
             }
             .associate { it.uuid to StoredPlayerPosition(it) }
     }
