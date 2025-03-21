@@ -30,7 +30,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     private val relativePositions = mutableMapOf<UUID, RelativePlayerLocation>()
 
     override fun onInitializeClient() {
-        ClientPlayNetworking.registerGlobalReceiver(PlayerLocationsS2CPayload.ID) { payload, ctx ->
+        ClientPlayNetworking.registerGlobalReceiver(PlayerLocationsS2CPayload.ID) { payload, _ ->
             relativePositionsLock.lock()
             if (payload.fullReset) {
                 relativePositions.clear()
@@ -56,6 +56,8 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     }
 
     fun render(context: DrawContext, tickCounter: RenderTickCounter) {
+        if (!PlayerLocatorPlus.config.visible) return
+
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
         val interactionManager = client.interactionManager ?: return
@@ -110,34 +112,34 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
             val markX = x + (progress * barWidth.toFloat()).roundToInt() - 4
             context.drawGuiTexture(
-                RenderLayer::getGuiTextured,
-                PLAYER_MARK_TEXTURE,
-                markX,
-                y - 1,
-                7,
-                7,
-                color,
+                /* renderLayers = */ RenderLayer::getGuiTextured,
+                /* sprite = */ PLAYER_MARK_TEXTURE,
+                /* x = */ markX,
+                /* y = */ y - 1,
+                /* width = */ 7,
+                /* height = */ 7,
+                /* color = */ color,
             )
 
             if (PlayerLocatorPlus.config.showHeight) {
                 val heightDiffNormalized = direction.normalize().y
                 if (heightDiffNormalized > 0.5) { // about 45 deg
                     context.drawGuiTexture(
-                        RenderLayer::getGuiTextured,
-                        PLAYER_MARK_UP_TEXTURE,
-                        markX + 1,
-                        y - 5,
-                        5,
-                        4,
+                        /* renderLayers = */ RenderLayer::getGuiTextured,
+                        /* sprite = */ PLAYER_MARK_UP_TEXTURE,
+                        /* x = */ markX + 1,
+                        /* y = */ y - 5,
+                        /* width = */ 5,
+                        /* height = */ 4,
                     )
                 } else if (heightDiffNormalized < -0.5) {
                     context.drawGuiTexture(
-                        RenderLayer::getGuiTextured,
-                        PLAYER_MARK_DOWN_TEXTURE,
-                        markX + 1,
-                        y + 7,
-                        5,
-                        4,
+                        /* renderLayers = */ RenderLayer::getGuiTextured,
+                        /* sprite = */ PLAYER_MARK_DOWN_TEXTURE,
+                        /* x = */ markX + 1,
+                        /* y = */ y + 7,
+                        /* width = */ 5,
+                        /* height = */ 4,
                     )
                 }
             }
