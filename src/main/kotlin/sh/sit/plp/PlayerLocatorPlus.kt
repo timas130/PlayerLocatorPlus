@@ -61,6 +61,8 @@ object PlayerLocatorPlus : ModInitializer {
                 .then(CommandManager.literal("reload")
                     .executes { c ->
                         c.source.sendFeedback({ Text.literal("Player Locator config reloaded") }, false)
+                        configHolder.load()
+                        config = configHolder.get()
                         BarUpdater.fullResend(c.source.server)
                         Command.SINGLE_SUCCESS
                     })
