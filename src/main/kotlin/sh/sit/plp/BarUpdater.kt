@@ -1,7 +1,7 @@
 package sh.sit.plp
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.entity.LivingEntity
+import net.minecraft.block.Blocks
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
@@ -158,7 +158,7 @@ object BarUpdater {
         return server.playerManager.playerList
             .filterNot {
                 (config.sneakingHides && it.isSneaking) ||
-                (config.pumpkinHides && !LivingEntity.NOT_WEARING_GAZE_DISGUISE_PREDICATE.test(it)) ||
+                (config.pumpkinHides && it.inventory.armor[3].isOf(Blocks.CARVED_PUMPKIN.asItem())) ||
                 (config.invisibilityHides && it.hasStatusEffect(StatusEffects.INVISIBILITY)) ||
                 it.isSpectator
             }

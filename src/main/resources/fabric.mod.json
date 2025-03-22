@@ -14,6 +14,7 @@
 	"license": "GPL-3.0-or-later",
 	"icon": "assets/player-locator-plus/icon.png",
 	"environment": "*",
+	"accessWidener": "player-locator-plus.accesswidener",
 	"entrypoints": {
 		"main": [
 			{
@@ -36,11 +37,11 @@
 	},
 	"depends": {
 		"fabricloader": ">=0.16.10",
-		"minecraft": "~1.21.4",
+		"minecraft": ">=1.21 <1.21.2",
 		"java": ">=21",
 		"fabric-api": "*",
 		"fabric-language-kotlin": "*",
-		"cloth-config": ">=17.0.144"
+		"cloth-config": ">=15.0.140"
 	},
 	"suggests": {
 		"modmenu": "*"

@@ -2,11 +2,9 @@ package sh.sit.plp
 
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback
-import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
@@ -19,8 +17,6 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.math.roundToInt
 
 object PlayerLocatorPlusClient : ClientModInitializer {
-    private val PLAYER_LOCATOR_LAYER = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locator")
-
     private val EXPERIENCE_BAR_BACKGROUND_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/empty_bar")
     private val PLAYER_MARK_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark")
     private val PLAYER_MARK_UP_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_up")
@@ -51,9 +47,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             relativePositionsLock.unlock()
         }
 
-        HudLayerRegistrationCallback.EVENT.register(HudLayerRegistrationCallback { drawer ->
-            drawer.attachLayerBefore(IdentifiedLayer.EXPERIENCE_LEVEL, PLAYER_LOCATOR_LAYER, ::render)
-        })
+        HudRenderCallback.EVENT.register(HudRenderCallback(::render))
     }
 
     fun render(context: DrawContext, tickCounter: RenderTickCounter) {
@@ -69,7 +63,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
         val barRendered = player.jumpingMount != null || interactionManager.hasExperienceBar()
         if (!barRendered) {
-            context.drawGuiTexture(RenderLayer::getGuiTextured, EXPERIENCE_BAR_BACKGROUND_TEXTURE, x, y, barWidth, 5)
+            context.drawGuiTexture(EXPERIENCE_BAR_BACKGROUND_TEXTURE, x, y, barWidth, 5)
         }
 
         relativePositionsLock.lock()
@@ -115,21 +109,20 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
             val markX = x + (progress * barWidth.toFloat()).roundToInt() - 4
             context.drawGuiTexture(
-                /* renderLayers = */ RenderLayer::getGuiTextured,
-                /* sprite = */ PLAYER_MARK_TEXTURE,
-                /* x = */ markX,
-                /* y = */ y - 1,
-                /* width = */ 7,
-                /* height = */ 7,
-                /* color = */ color,
+                texture = PLAYER_MARK_TEXTURE,
+                x = markX,
+                y = y - 1,
+                z = 0,
+                width = 7,
+                height = 7,
+                color = color,
             )
 
             if (config.showHeight) {
                 val heightDiffNormalized = direction.normalize().y
                 if (heightDiffNormalized > 0.5) { // about 45 deg
                     context.drawGuiTexture(
-                        /* renderLayers = */ RenderLayer::getGuiTextured,
-                        /* sprite = */ PLAYER_MARK_UP_TEXTURE,
+                        /* texture = */ PLAYER_MARK_UP_TEXTURE,
                         /* x = */ markX + 1,
                         /* y = */ y - 5,
                         /* width = */ 5,
@@ -137,8 +130,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                     )
                 } else if (heightDiffNormalized < -0.5) {
                     context.drawGuiTexture(
-                        /* renderLayers = */ RenderLayer::getGuiTextured,
-                        /* sprite = */ PLAYER_MARK_DOWN_TEXTURE,
+                        /* texture = */ PLAYER_MARK_DOWN_TEXTURE,
                         /* x = */ markX + 1,
                         /* y = */ y + 7,
                         /* width = */ 5,
@@ -149,5 +141,25 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         }
 
         relativePositionsLock.unlock()
+    }
+
+    private fun DrawContext.drawGuiTexture(texture: Identifier, x: Int, y: Int, z: Int, width: Int, height: Int, color: Int) {
+        val sprite = guiAtlasManager.getSprite(texture)
+        drawTexturedQuad(
+            sprite.atlasId,
+            x,
+            x + width,
+            y,
+            y + height,
+            z,
+            sprite.minU,
+            sprite.maxU,
+            sprite.minV,
+            sprite.maxV,
+            (color shr 16 and 0xFF) / 255f,
+            (color shr 8 and 0xFF) / 255f,
+            (color and 0xFF) / 255f,
+            (color shr 24 and 0xFF) / 255.0f,
+        )
     }
 }
