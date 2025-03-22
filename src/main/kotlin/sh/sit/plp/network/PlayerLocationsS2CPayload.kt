@@ -30,7 +30,7 @@ data class PlayerLocationsS2CPayload(
                 Uuids.PACKET_CODEC
             ),
             PlayerLocationsS2CPayload::removeUuids,
-            PacketCodecs.BOOLEAN,
+            PacketCodecs.BOOL,
             PlayerLocationsS2CPayload::fullReset,
             ::PlayerLocationsS2CPayload
         )
