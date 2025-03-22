@@ -1,4 +1,3 @@
 accessWidener v2 named
 
-accessible field net/minecraft/client/gui/DrawContext guiAtlasManager Lnet/minecraft/client/texture/GuiAtlasManager;
 accessible method net/minecraft/client/gui/DrawContext drawTexturedQuad (Lnet/minecraft/util/Identifier;IIIIIFFFFFFFF)V

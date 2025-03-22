@@ -39,11 +39,11 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
 	// Cloth Config API
-	modApi("me.shedaniel.cloth:cloth-config-fabric:15.0.140") {
+	modApi("me.shedaniel.cloth:cloth-config-fabric:11.1.136") {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
 	// Mod Menu
-	modApi("com.terraformersmc:modmenu:11.0.3")
+	modApi("com.terraformersmc:modmenu:7.0.1")
 }
 
 processResources {
@@ -55,12 +55,12 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 17
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 	kotlinOptions {
-		jvmTarget = 21
+		jvmTarget = 17
 	}
 }
 
@@ -70,8 +70,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {

@@ -7,13 +7,11 @@ import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.server.command.CommandManager
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import org.slf4j.LoggerFactory
-import sh.sit.plp.network.PlayerLocationsS2CPayload
 
 object PlayerLocatorPlus : ModInitializer {
     const val MOD_ID = "player-locator-plus"
@@ -36,8 +34,6 @@ object PlayerLocatorPlus : ModInitializer {
             config = modConfig
             ActionResult.SUCCESS
         }
-
-        PayloadTypeRegistry.playS2C().register(PlayerLocationsS2CPayload.ID, PlayerLocationsS2CPayload.CODEC)
 
         ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, _, _ ->
             BarUpdater.fullResend(handler.player)

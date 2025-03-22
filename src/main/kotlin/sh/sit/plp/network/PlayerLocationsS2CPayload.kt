@@ -1,11 +1,9 @@
 package sh.sit.plp.network
 
+import net.fabricmc.fabric.api.networking.v1.FabricPacket
+import net.fabricmc.fabric.api.networking.v1.PacketType
 import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.network.codec.PacketCodecs
-import net.minecraft.network.packet.CustomPayload
 import net.minecraft.util.Identifier
-import net.minecraft.util.Uuids
 import sh.sit.plp.PlayerLocatorPlus
 import java.util.*
 
@@ -14,27 +12,32 @@ data class PlayerLocationsS2CPayload(
     val locationUpdates: List<RelativePlayerLocation>,
     val removeUuids: List<UUID>,
     val fullReset: Boolean,
-) : CustomPayload {
+) : FabricPacket {
     companion object {
-        private val PLAYER_LOCATIONS_PAYLOAD_ID = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locations")
+        val ID = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locations")
 
-        val ID = CustomPayload.Id<PlayerLocationsS2CPayload>(PLAYER_LOCATIONS_PAYLOAD_ID)
-        val CODEC: PacketCodec<PacketByteBuf, PlayerLocationsS2CPayload> = PacketCodec.tuple(
-            PacketCodecs.collection(
-                /* factory = */ { capacity -> ArrayList(capacity) },
-                /* elementCodec = */ RelativePlayerLocation.CODEC
-            ),
-            PlayerLocationsS2CPayload::locationUpdates,
-            PacketCodecs.collection(
-                { capacity -> ArrayList(capacity) },
-                Uuids.PACKET_CODEC
-            ),
-            PlayerLocationsS2CPayload::removeUuids,
-            PacketCodecs.BOOL,
-            PlayerLocationsS2CPayload::fullReset,
-            ::PlayerLocationsS2CPayload
-        )
+        val TYPE = PacketType.create(ID) { buf ->
+            PlayerLocationsS2CPayload(
+                locationUpdates = buf.readCollection(
+                    { capacity -> ArrayList(capacity) },
+                    RelativePlayerLocation.READER,
+                ),
+                removeUuids = buf.readCollection(
+                    { capacity -> ArrayList(capacity) },
+                    PacketByteBuf::readUuid,
+                ),
+                fullReset = buf.readBoolean(),
+            )
+        }
     }
 
-    override fun getId(): CustomPayload.Id<out CustomPayload> = ID
+    override fun write(buf: PacketByteBuf) {
+        buf.writeCollection(locationUpdates, RelativePlayerLocation.WRITER)
+        buf.writeCollection(removeUuids, PacketByteBuf::writeUuid)
+        buf.writeBoolean(fullReset)
+    }
+
+    override fun getType(): PacketType<PlayerLocationsS2CPayload> {
+        return TYPE
+    }
 }

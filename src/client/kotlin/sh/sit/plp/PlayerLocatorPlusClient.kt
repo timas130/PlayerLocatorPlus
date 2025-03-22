@@ -5,7 +5,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import org.joml.Vector2d
@@ -17,17 +16,17 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.math.roundToInt
 
 object PlayerLocatorPlusClient : ClientModInitializer {
-    private val EXPERIENCE_BAR_BACKGROUND_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/empty_bar")
-    private val PLAYER_MARK_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark")
-    private val PLAYER_MARK_UP_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_up")
-    private val PLAYER_MARK_DOWN_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_down")
+    private val EXPERIENCE_BAR_BACKGROUND_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "textures/gui/sprites/hud/empty_bar.png")!!
+    private val PLAYER_MARK_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "textures/gui/sprites/hud/player_mark.png")!!
+    private val PLAYER_MARK_UP_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "textures/gui/sprites/hud/player_mark_up.png")!!
+    private val PLAYER_MARK_DOWN_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "textures/gui/sprites/hud/player_mark_down.png")!!
 
     private val relativePositionsLock = ReentrantLock()
     private var lastUpdatePosition = Vec3d.ZERO
     private val relativePositions = mutableMapOf<UUID, RelativePlayerLocation>()
 
     override fun onInitializeClient() {
-        ClientPlayNetworking.registerGlobalReceiver(PlayerLocationsS2CPayload.ID) { payload, _ ->
+        ClientPlayNetworking.registerGlobalReceiver(PlayerLocationsS2CPayload.TYPE) { payload, _, _ ->
             relativePositionsLock.lock()
             if (payload.fullReset) {
                 relativePositions.clear()
@@ -50,7 +49,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         HudRenderCallback.EVENT.register(HudRenderCallback(::render))
     }
 
-    fun render(context: DrawContext, tickCounter: RenderTickCounter) {
+    fun render(context: DrawContext, deltaTick: Float) {
         if (!config.visible) return
 
         val client = MinecraftClient.getInstance()
@@ -63,22 +62,30 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
         val barRendered = player.jumpingMount != null || interactionManager.hasExperienceBar()
         if (!barRendered) {
-            context.drawGuiTexture(EXPERIENCE_BAR_BACKGROUND_TEXTURE, x, y, barWidth, 5)
+            context.drawGuiTexture(
+                texture = EXPERIENCE_BAR_BACKGROUND_TEXTURE,
+                x = x,
+                y = y,
+                z = 0,
+                width = barWidth,
+                height = 5,
+                color = 0xFFFFFFFF.toInt()
+            )
         }
 
         relativePositionsLock.lock()
 
         for ((_, position) in relativePositions) {
             val actualPosition = player.world.getPlayerByUuid(position.playerUuid)
-                ?.getLerpedPos(tickCounter.getTickDelta(false))
+                ?.getLerpedPos(deltaTick)
             val direction = if (actualPosition != null) {
-                actualPosition.subtract(player.getLerpedPos(tickCounter.getTickDelta(false)))
+                actualPosition.subtract(player.getLerpedPos(deltaTick))
             } else if (position.distance == 0f) {
                 Vec3d(position.direction)
             } else {
                 val projectedPosition = lastUpdatePosition
                     .add(Vec3d(position.direction).multiply(position.distance.toDouble()))
-                projectedPosition.subtract(player.getLerpedPos(tickCounter.getTickDelta(false)))
+                projectedPosition.subtract(player.getLerpedPos(deltaTick))
             }
 
             val direction2d = Vector2d(direction.x, direction.z)
@@ -122,19 +129,23 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 val heightDiffNormalized = direction.normalize().y
                 if (heightDiffNormalized > 0.5) { // about 45 deg
                     context.drawGuiTexture(
-                        /* texture = */ PLAYER_MARK_UP_TEXTURE,
-                        /* x = */ markX + 1,
-                        /* y = */ y - 5,
-                        /* width = */ 5,
-                        /* height = */ 4,
+                        texture = PLAYER_MARK_UP_TEXTURE,
+                        x = markX + 1,
+                        y = y - 5,
+                        z = 0,
+                        width = 5,
+                        height = 4,
+                        color = 0xFFFFFFFF.toInt(),
                     )
                 } else if (heightDiffNormalized < -0.5) {
                     context.drawGuiTexture(
-                        /* texture = */ PLAYER_MARK_DOWN_TEXTURE,
-                        /* x = */ markX + 1,
-                        /* y = */ y + 7,
-                        /* width = */ 5,
-                        /* height = */ 4,
+                        texture = PLAYER_MARK_DOWN_TEXTURE,
+                        x = markX + 1,
+                        y = y + 7,
+                        z = 0,
+                        width = 5,
+                        height = 4,
+                        color = 0xFFFFFFFF.toInt(),
                     )
                 }
             }
@@ -144,18 +155,17 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     }
 
     private fun DrawContext.drawGuiTexture(texture: Identifier, x: Int, y: Int, z: Int, width: Int, height: Int, color: Int) {
-        val sprite = guiAtlasManager.getSprite(texture)
         drawTexturedQuad(
-            sprite.atlasId,
+            texture,
             x,
             x + width,
             y,
             y + height,
             z,
-            sprite.minU,
-            sprite.maxU,
-            sprite.minV,
-            sprite.maxV,
+            0f,
+            1f,
+            0f,
+            1f,
             (color shr 16 and 0xFF) / 255f,
             (color shr 8 and 0xFF) / 255f,
             (color and 0xFF) / 255f,

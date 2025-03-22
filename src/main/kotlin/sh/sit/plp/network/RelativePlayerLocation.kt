@@ -1,7 +1,7 @@
 package sh.sit.plp.network
 
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
+import net.minecraft.network.PacketByteBuf.PacketReader
+import net.minecraft.network.PacketByteBuf.PacketWriter
 import org.joml.Vector3f
 import java.util.*
 
@@ -14,19 +14,18 @@ data class RelativePlayerLocation(
     val distance: Float,
 ) {
     companion object {
-        val CODEC: PacketCodec<PacketByteBuf, RelativePlayerLocation> =
-            PacketCodec.of(RelativePlayerLocation::write, ::RelativePlayerLocation)
-    }
+        val WRITER = PacketWriter<RelativePlayerLocation> { buf, self ->
+            buf.writeUuid(self.playerUuid)
+            buf.writeVector3f(self.direction)
+            buf.writeFloat(self.distance)
+        }
 
-    constructor(buf: PacketByteBuf) : this(
-        playerUuid = buf.readUuid(),
-        direction = buf.readVector3f(),
-        distance = buf.readFloat(),
-    )
-
-    fun write(buf: PacketByteBuf) {
-        buf.writeUuid(playerUuid)
-        buf.writeVector3f(direction)
-        buf.writeFloat(distance)
+        val READER = PacketReader { buf ->
+            RelativePlayerLocation(
+                playerUuid = buf.readUuid(),
+                direction = buf.readVector3f(),
+                distance = buf.readFloat(),
+            )
+        }
     }
 }
