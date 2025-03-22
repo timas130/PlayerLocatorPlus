@@ -5,7 +5,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import org.joml.Vector2d
@@ -17,10 +16,10 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.math.roundToInt
 
 object PlayerLocatorPlusClient : ClientModInitializer {
-    private val EXPERIENCE_BAR_BACKGROUND_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/empty_bar")
-    private val PLAYER_MARK_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark")
-    private val PLAYER_MARK_UP_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_up")
-    private val PLAYER_MARK_DOWN_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_down")
+    private val EXPERIENCE_BAR_BACKGROUND_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/empty_bar")!!
+    private val PLAYER_MARK_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark")!!
+    private val PLAYER_MARK_UP_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_up")!!
+    private val PLAYER_MARK_DOWN_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_down")!!
 
     private val relativePositionsLock = ReentrantLock()
     private var lastUpdatePosition = Vec3d.ZERO
@@ -50,7 +49,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         HudRenderCallback.EVENT.register(HudRenderCallback(::render))
     }
 
-    fun render(context: DrawContext, tickCounter: RenderTickCounter) {
+    fun render(context: DrawContext, deltaTick: Float) {
         if (!config.visible) return
 
         val client = MinecraftClient.getInstance()
@@ -70,15 +69,15 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
         for ((_, position) in relativePositions) {
             val actualPosition = player.world.getPlayerByUuid(position.playerUuid)
-                ?.getLerpedPos(tickCounter.getTickDelta(false))
+                ?.getLerpedPos(deltaTick)
             val direction = if (actualPosition != null) {
-                actualPosition.subtract(player.getLerpedPos(tickCounter.getTickDelta(false)))
+                actualPosition.subtract(player.getLerpedPos(deltaTick))
             } else if (position.distance == 0f) {
                 Vec3d(position.direction)
             } else {
                 val projectedPosition = lastUpdatePosition
                     .add(Vec3d(position.direction).multiply(position.distance.toDouble()))
-                projectedPosition.subtract(player.getLerpedPos(tickCounter.getTickDelta(false)))
+                projectedPosition.subtract(player.getLerpedPos(deltaTick))
             }
 
             val direction2d = Vector2d(direction.x, direction.z)
