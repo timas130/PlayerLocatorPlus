@@ -31,6 +31,8 @@ class ModConfig : ConfigData {
     @ConfigEntry.Gui.Tooltip
     var visible = true
     @ConfigEntry.Category("style")
+    var visibleEmpty = false
+    @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var fadeMarkers = true
     @ConfigEntry.Category("style")

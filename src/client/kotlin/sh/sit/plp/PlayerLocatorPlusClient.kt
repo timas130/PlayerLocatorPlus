@@ -63,6 +63,8 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         val player = client.player ?: return
         val interactionManager = client.interactionManager ?: return
 
+        if (!config.visibleEmpty && client.networkHandler?.playerList.isNullOrEmpty()) return
+
         val barWidth = 182
         val x = context.scaledWindowWidth / 2 - 91
         val y = context.scaledWindowHeight - 32 + 3
