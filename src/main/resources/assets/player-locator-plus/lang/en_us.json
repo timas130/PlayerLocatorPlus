@@ -12,6 +12,8 @@
   "text.autoconfig.player-locator-plus.option.ticksBetweenUpdates.@Tooltip": "Number of server ticks between updates to the player locator. Decreasing this value increases network usage. Reading technical details is recommended before changing this value.",
   "text.autoconfig.player-locator-plus.option.sneakingHides": "Sneaking hides",
   "text.autoconfig.player-locator-plus.option.pumpkinHides": "Wearing a pumpkin hides",
+  "text.autoconfig.player-locator-plus.option.mobHeadsHide": "Mob and player heads hide",
+  "text.autoconfig.player-locator-plus.option.mobHeadsHide.@Tooltip": "You can edit the list of head equipment that hides from the locator bar by editing the player-locator-plus:hiding_equipment tag in a datapack.",
   "text.autoconfig.player-locator-plus.option.invisibilityHides": "Invisibility effect hides",
   "text.autoconfig.player-locator-plus.category.style": "Style",
   "text.autoconfig.player-locator-plus.option.visible": "Visible",

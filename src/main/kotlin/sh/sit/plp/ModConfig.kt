@@ -25,6 +25,9 @@ class ModConfig : ConfigData {
     @ConfigEntry.Category("general")
     var pumpkinHides = true
     @ConfigEntry.Category("general")
+    @ConfigEntry.Gui.Tooltip
+    var mobHeadsHide = true
+    @ConfigEntry.Category("general")
     var invisibilityHides = true
 
     @ConfigEntry.Category("style")
