@@ -9,6 +9,7 @@ import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
+import net.minecraft.world.GameMode
 import org.joml.Vector2d
 import sh.sit.plp.PlayerLocatorPlus.config
 import sh.sit.plp.network.PlayerLocationsS2CPayload
@@ -30,6 +31,8 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     private val relativePositions = mutableMapOf<UUID, RelativePlayerLocation>()
 
     override fun onInitializeClient() {
+        ConfigManagerClient.init()
+
         ClientPlayNetworking.registerGlobalReceiver(PlayerLocationsS2CPayload.ID) { payload, _ ->
             relativePositionsLock.lock()
             if (payload.fullReset) {
@@ -53,10 +56,42 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         HudRenderCallback.EVENT.register(PLAYER_LOCATOR_LAYER, ::render)
     }
 
+    private fun isBarVisible(client: MinecraftClient): Boolean {
+        val player = client.player ?: return false
+        val interactionManager = client.interactionManager ?: return false
+        val inGameHud = client.inGameHud
+        val networkHandler = client.networkHandler
+
+        // hide when disabled
+        if (!config.visible) {
+            return false
+        }
+        // hide in F1
+        if (client.options.hudHidden) {
+            return false
+        }
+        // hide when there are no other players online and relativePositions is empty
+        if (
+            !config.visibleEmpty &&
+            networkHandler?.playerList?.any { it.profile.id != player.uuid } != true &&
+            relativePositions.isEmpty()
+        ) {
+            return false
+        }
+        // hide in spectator mode when the spectator menu is not open
+        if (interactionManager.currentGameMode == GameMode.SPECTATOR && !inGameHud.spectatorHud.isOpen) {
+            return false
+        }
+
+        return true
+    }
+
     fun render(context: DrawContext, tickCounter: RenderTickCounter) {
         if (!config.visible) return
 
         val client = MinecraftClient.getInstance()
+        if (!isBarVisible(client)) return
+
         val player = client.player ?: return
         val interactionManager = client.interactionManager ?: return
 
