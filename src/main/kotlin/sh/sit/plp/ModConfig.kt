@@ -1,35 +1,37 @@
 package sh.sit.plp
 
+import kotlinx.serialization.Serializable
 import me.shedaniel.autoconfig.ConfigData
 import me.shedaniel.autoconfig.annotation.Config
 import me.shedaniel.autoconfig.annotation.ConfigEntry
 
 @Config(name = PlayerLocatorPlus.MOD_ID)
+@Serializable
 class ModConfig : ConfigData {
-    @ConfigEntry.Category("general")
     var enabled = true
-    @ConfigEntry.Category("general")
+    @ConfigEntry.Gui.Tooltip
+    var sendServerConfig = true
     @ConfigEntry.Gui.Tooltip
     var sendDistance = true
-    @ConfigEntry.Category("general")
     @ConfigEntry.Gui.Tooltip
     var maxDistance = 0
-    @ConfigEntry.Category("general")
     @ConfigEntry.Gui.Tooltip
     var directionPrecision = 300f
-    @ConfigEntry.Category("general")
     @ConfigEntry.Gui.Tooltip
     var ticksBetweenUpdates = 5
-    @ConfigEntry.Category("general")
     var sneakingHides = true
-    @ConfigEntry.Category("general")
     var pumpkinHides = true
-    @ConfigEntry.Category("general")
+    @ConfigEntry.Gui.Tooltip
+    var mobHeadsHide = true
     var invisibilityHides = true
 
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var visible = true
+    @ConfigEntry.Category("style")
+    var visibleEmpty = false
+    @ConfigEntry.Category("style")
+    var acceptServerConfig = true
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var fadeMarkers = true
