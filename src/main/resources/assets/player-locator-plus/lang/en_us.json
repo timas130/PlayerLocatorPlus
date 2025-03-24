@@ -1,7 +1,9 @@
 {
   "text.autoconfig.player-locator-plus.title": "Player Locator Plus Configuration",
-  "text.autoconfig.player-locator-plus.category.general": "General",
+  "text.autoconfig.player-locator-plus.category.default": "General",
   "text.autoconfig.player-locator-plus.option.enabled": "Enabled (server)",
+  "text.autoconfig.player-locator-plus.option.sendServerConfig": "Send server config to clients",
+  "text.autoconfig.player-locator-plus.option.sendServerConfig.@Tooltip": "Send all config options to the client including client-side style options.",
   "text.autoconfig.player-locator-plus.option.sendDistance": "Send distance information (server)",
   "text.autoconfig.player-locator-plus.option.sendDistance.@Tooltip": "Send exact distances to other players along with the direction. This significantly improves smoothness.",
   "text.autoconfig.player-locator-plus.option.maxDistance": "Maximum player distance",
@@ -20,6 +22,7 @@
   "text.autoconfig.player-locator-plus.option.visible.@Tooltip": "Whether the markers are shown on the client",
   "text.autoconfig.player-locator-plus.option.visibleEmpty": "Visible when empty",
   "text.autoconfig.player-locator-plus.option.visibleEmpty.@Tooltip": "Whether the bar should be visible when there are no markers and no other players are online on the server",
+  "text.autoconfig.player-locator-plus.option.acceptServerConfig": "Use server-side config",
   "text.autoconfig.player-locator-plus.option.fadeMarkers": "Fade markers",
   "text.autoconfig.player-locator-plus.option.fadeMarkers.@Tooltip": "Decrease markers' opacity when you're far from another player",
   "text.autoconfig.player-locator-plus.option.fadeStart": "Minimum fade distance",

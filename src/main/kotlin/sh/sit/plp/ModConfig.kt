@@ -1,33 +1,31 @@
 package sh.sit.plp
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import me.shedaniel.autoconfig.ConfigData
 import me.shedaniel.autoconfig.annotation.Config
 import me.shedaniel.autoconfig.annotation.ConfigEntry
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.network.codec.PacketCodec
 
 @Config(name = PlayerLocatorPlus.MOD_ID)
+@Serializable
 class ModConfig : ConfigData {
-    @ConfigEntry.Category("general")
     var enabled = true
-    @ConfigEntry.Category("general")
+    @ConfigEntry.Gui.Tooltip
+    var sendServerConfig = true
     @ConfigEntry.Gui.Tooltip
     var sendDistance = true
-    @ConfigEntry.Category("general")
     @ConfigEntry.Gui.Tooltip
     var maxDistance = 0
-    @ConfigEntry.Category("general")
     @ConfigEntry.Gui.Tooltip
     var directionPrecision = 300f
-    @ConfigEntry.Category("general")
     @ConfigEntry.Gui.Tooltip
     var ticksBetweenUpdates = 5
-    @ConfigEntry.Category("general")
     var sneakingHides = true
-    @ConfigEntry.Category("general")
     var pumpkinHides = true
-    @ConfigEntry.Category("general")
     @ConfigEntry.Gui.Tooltip
     var mobHeadsHide = true
-    @ConfigEntry.Category("general")
     var invisibilityHides = true
 
     @ConfigEntry.Category("style")
@@ -35,6 +33,8 @@ class ModConfig : ConfigData {
     var visible = true
     @ConfigEntry.Category("style")
     var visibleEmpty = false
+    @ConfigEntry.Category("style")
+    var acceptServerConfig = true
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var fadeMarkers = true
@@ -72,6 +72,24 @@ class ModConfig : ConfigData {
         if (maxDistance < 0) {
             PlayerLocatorPlus.logger.warn("invalid config: maxDistance < 0")
             maxDistance = 0
+        }
+    }
+
+    companion object {
+        val PACKET_CODEC = object : PacketCodec<PacketByteBuf, ModConfig> {
+            val json = Json {
+                encodeDefaults = true
+                ignoreUnknownKeys = true
+            }
+
+            override fun encode(buf: PacketByteBuf, value: ModConfig) {
+                buf.writeString(json.encodeToString(value), 16 * 1024)
+            }
+
+            override fun decode(buf: PacketByteBuf): ModConfig {
+                val data = buf.readString(16 * 1024)
+                return json.decodeFromString(data)
+            }
         }
     }
 }

@@ -1,8 +1,6 @@
 package sh.sit.plp
 
 import com.mojang.brigadier.Command
-import me.shedaniel.autoconfig.AutoConfig
-import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -13,9 +11,9 @@ import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.tag.TagKey
 import net.minecraft.server.command.CommandManager
 import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
 import org.slf4j.LoggerFactory
+import sh.sit.plp.network.ModConfigS2CPayload
 import sh.sit.plp.network.PlayerLocationsS2CPayload
 
 object PlayerLocatorPlus : ModInitializer {
@@ -26,23 +24,13 @@ object PlayerLocatorPlus : ModInitializer {
 
     private var tickCounter = 0
 
-    lateinit var config: ModConfig
+    val config get() = ConfigManager.getConfig()
 
     override fun onInitialize() {
-        // config
-        AutoConfig.register(ModConfig::class.java, ::Toml4jConfigSerializer)
-        val configHolder = AutoConfig.getConfigHolder(ModConfig::class.java)
-        config = configHolder.config
-        configHolder.registerSaveListener { _, modConfig ->
-            config = modConfig
-            ActionResult.SUCCESS
-        }
-        configHolder.registerLoadListener { _, modConfig ->
-            config = modConfig
-            ActionResult.SUCCESS
-        }
+        ConfigManager.init()
 
         PayloadTypeRegistry.playS2C().register(PlayerLocationsS2CPayload.ID, PlayerLocationsS2CPayload.CODEC)
+        PayloadTypeRegistry.playS2C().register(ModConfigS2CPayload.ID, ModConfigS2CPayload.CODEC)
 
         ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, _, _ ->
             BarUpdater.fullResend(handler.player)
@@ -61,13 +49,12 @@ object PlayerLocatorPlus : ModInitializer {
             BarUpdater.reset()
         })
 
-        CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback { dispatcher, registry, env ->
+        CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback { dispatcher, _, _ ->
             dispatcher.register(CommandManager.literal("plp")
                 .then(CommandManager.literal("reload")
                     .executes { c ->
                         c.source.sendFeedback({ Text.literal("Player Locator config reloaded") }, false)
-                        configHolder.load()
-                        config = configHolder.get()
+                        ConfigManager.reload(fromDisk = true)
                         BarUpdater.fullResend(c.source.server)
                         Command.SINGLE_SUCCESS
                     })

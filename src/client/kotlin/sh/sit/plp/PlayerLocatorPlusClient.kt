@@ -32,6 +32,8 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     private val relativePositions = mutableMapOf<UUID, RelativePlayerLocation>()
 
     override fun onInitializeClient() {
+        ConfigManagerClient.init()
+
         ClientPlayNetworking.registerGlobalReceiver(PlayerLocationsS2CPayload.ID) { payload, _ ->
             relativePositionsLock.lock()
             if (payload.fullReset) {
