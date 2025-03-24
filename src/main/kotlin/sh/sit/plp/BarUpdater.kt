@@ -1,6 +1,7 @@
 package sh.sit.plp
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.block.Blocks
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.server.MinecraftServer
@@ -159,6 +160,7 @@ object BarUpdater {
             .filterNot {
                 (config.sneakingHides && it.isSneaking) ||
                 (config.pumpkinHides && it.inventory.armor[3].isOf(Blocks.CARVED_PUMPKIN.asItem())) ||
+                (config.mobHeadsHide && it.getEquippedStack(EquipmentSlot.HEAD).isIn(PlayerLocatorPlus.HIDING_EQUIPMENT_TAG)) ||
                 (config.invisibilityHides && it.hasStatusEffect(StatusEffects.INVISIBILITY)) ||
                 it.isSpectator
             }
