@@ -19,6 +19,7 @@
   "text.autoconfig.player-locator-plus.option.visible": "Visible",
   "text.autoconfig.player-locator-plus.option.visible.@Tooltip": "Whether the markers are shown on the client",
   "text.autoconfig.player-locator-plus.option.visibleEmpty": "Visible when empty",
+  "text.autoconfig.player-locator-plus.option.visibleEmpty.@Tooltip": "Whether the bar should be visible when there are no markers and no other players are online on the server",
   "text.autoconfig.player-locator-plus.option.fadeMarkers": "Fade markers",
   "text.autoconfig.player-locator-plus.option.fadeMarkers.@Tooltip": "Decrease markers' opacity when you're far from another player",
   "text.autoconfig.player-locator-plus.option.fadeStart": "Minimum fade distance",
