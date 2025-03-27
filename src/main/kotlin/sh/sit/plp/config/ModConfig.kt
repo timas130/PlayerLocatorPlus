@@ -1,4 +1,4 @@
-package sh.sit.plp
+package sh.sit.plp.config
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -7,6 +7,7 @@ import me.shedaniel.autoconfig.annotation.Config
 import me.shedaniel.autoconfig.annotation.ConfigEntry
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.codec.PacketCodec
+import sh.sit.plp.PlayerLocatorPlus
 
 @Config(name = PlayerLocatorPlus.MOD_ID)
 @Serializable

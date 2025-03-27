@@ -13,6 +13,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 import org.joml.Vector2d
 import sh.sit.plp.PlayerLocatorPlus.config
+import sh.sit.plp.config.ConfigManagerClient
 import sh.sit.plp.network.PlayerLocationsS2CPayload
 import sh.sit.plp.network.RelativePlayerLocation
 import java.util.*

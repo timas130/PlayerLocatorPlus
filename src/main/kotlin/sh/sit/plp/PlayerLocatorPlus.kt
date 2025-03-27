@@ -13,6 +13,7 @@ import net.minecraft.server.command.CommandManager
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import org.slf4j.LoggerFactory
+import sh.sit.plp.config.ConfigManager
 import sh.sit.plp.network.ModConfigS2CPayload
 import sh.sit.plp.network.PlayerLocationsS2CPayload
 

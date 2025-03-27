@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
 	id 'fabric-loom' version '1.10-SNAPSHOT'
 	id 'maven-publish'
@@ -26,7 +28,17 @@ loom {
 			sourceSet sourceSets.client
 		}
 	}
+}
 
+configurations {
+	includeAndExpose
+
+	modApi {
+		extendsFrom includeAndExpose
+	}
+	include {
+		extendsFrom includeAndExpose
+	}
 }
 
 dependencies {
@@ -44,6 +56,14 @@ dependencies {
 	}
 	// Mod Menu
 	modApi("com.terraformersmc:modmenu:13.0.3")
+
+	// Better TOML serializer
+	// RANT: So basically Toml4j, the library auto config uses to serialize configs in TOML,
+	//       only supports an ancient version of the spec: TOML 0.4.0. This version is so old it
+	//       does NOT support hexadecimal numbers, which makes it very hard to specify colors
+	//       in the config. So we opt for a better library that actually implements the latest
+	//       version of the format.
+	includeAndExpose("com.akuleshov7:ktoml-core:0.5.2")
 }
 
 processResources {
@@ -58,7 +78,7 @@ tasks.withType(JavaCompile).configureEach {
 	it.options.release = 21
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+tasks.withType(KotlinCompile).configureEach {
 	kotlinOptions {
 		jvmTarget = 21
 	}
