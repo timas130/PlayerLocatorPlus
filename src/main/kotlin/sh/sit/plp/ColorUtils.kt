@@ -6,7 +6,7 @@ import kotlin.math.atan
 import kotlin.math.tan
 import kotlin.random.Random
 
-object Utils {
+object ColorUtils {
     fun calculateHorizontalFov(verticalFov: Int, width: Int, height: Int): Double {
         // ffs
         val fovRad = verticalFov / 2.0 * Math.PI / 180.0

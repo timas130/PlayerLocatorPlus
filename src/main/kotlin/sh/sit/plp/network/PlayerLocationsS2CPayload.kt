@@ -16,7 +16,7 @@ data class PlayerLocationsS2CPayload(
     val fullReset: Boolean,
 ) : CustomPayload {
     companion object {
-        private val PLAYER_LOCATIONS_PAYLOAD_ID = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locations")
+        private val PLAYER_LOCATIONS_PAYLOAD_ID = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locations_v2")
 
         val ID = CustomPayload.Id<PlayerLocationsS2CPayload>(PLAYER_LOCATIONS_PAYLOAD_ID)
         val CODEC: PacketCodec<PacketByteBuf, PlayerLocationsS2CPayload> = PacketCodec.tuple(

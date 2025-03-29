@@ -1,10 +1,13 @@
 package sh.sit.plp.config
 
+import com.akuleshov7.ktoml.annotations.TomlInteger
+import com.akuleshov7.ktoml.writers.IntegerRepresentation
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import me.shedaniel.autoconfig.ConfigData
 import me.shedaniel.autoconfig.annotation.Config
 import me.shedaniel.autoconfig.annotation.ConfigEntry
+import me.shedaniel.clothconfig2.gui.entries.SelectionListEntry.Translatable
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.codec.PacketCodec
 import sh.sit.plp.PlayerLocatorPlus
@@ -48,6 +51,29 @@ class ModConfig : ConfigData {
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var showHeight = true
+    @ConfigEntry.Category("style")
+    @ConfigEntry.Gui.Tooltip
+    var showHeadsOnTab = true
+
+    @ConfigEntry.Category("color")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    var colorMode = ColorMode.UUID
+    @ConfigEntry.Category("color")
+    @ConfigEntry.ColorPicker
+    @ConfigEntry.Gui.Tooltip
+    @TomlInteger(IntegerRepresentation.HEX)
+    var constantColor = 0xFFFFFF
+
+    enum class ColorMode(private val key: String) : Translatable {
+        UUID("uuid"),
+        TEAM_COLOR("team_color"),
+        CUSTOM("custom"),
+        CONSTANT("constant");
+
+        override fun getKey(): String {
+            return "text.autoconfig.player-locator-plus.option.colorMode.$key"
+        }
+    }
 
     override fun validatePostLoad() {
         if (fadeStart < 0) {

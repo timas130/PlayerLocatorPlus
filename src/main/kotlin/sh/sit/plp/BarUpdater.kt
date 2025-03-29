@@ -10,6 +10,8 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
 import org.joml.Vector3f
 import sh.sit.plp.PlayerLocatorPlus.config
+import sh.sit.plp.color.PlayerDataState
+import sh.sit.plp.config.ModConfig
 import sh.sit.plp.network.PlayerLocationsS2CPayload
 import sh.sit.plp.network.RelativePlayerLocation
 import java.util.*
@@ -20,8 +22,20 @@ object BarUpdater {
     private data class StoredPlayerPosition(
         val pos: Vec3d,
         val world: World,
+        val color: Int,
     ) {
-        constructor(player: ServerPlayerEntity) : this(player.pos, player.world)
+        constructor(player: ServerPlayerEntity) : this(player.pos, player.world, calculateColor(player))
+
+        companion object {
+            fun calculateColor(player: ServerPlayerEntity): Int {
+                return when (config.colorMode) {
+                    ModConfig.ColorMode.UUID -> ColorUtils.uuidToColor(player.uuid)
+                    ModConfig.ColorMode.TEAM_COLOR -> player.teamColorValue
+                    ModConfig.ColorMode.CONSTANT -> config.constantColor
+                    ModConfig.ColorMode.CUSTOM -> PlayerDataState.of(player.server).getPlayer(player.uuid).customColor
+                }
+            }
+        }
     }
 
     private var previousPositions = mapOf<UUID, StoredPlayerPosition>()
@@ -182,7 +196,8 @@ object BarUpdater {
                 else round(distance / 50) * 50
             } else {
                 0f
-            }
+            },
+            color = otherPos.color,
         )
     }
 
@@ -193,6 +208,7 @@ object BarUpdater {
                     playerUuid = UUID.randomUUID(),
                     direction = Vector3f(Random.nextFloat(), Random.nextFloat() * 0.75f, Random.nextFloat()),
                     distance = if (config.sendDistance) Random.nextFloat() * 750f else 0f,
+                    color = ColorUtils.uuidToColor(UUID.randomUUID()),
                 )
             }
 

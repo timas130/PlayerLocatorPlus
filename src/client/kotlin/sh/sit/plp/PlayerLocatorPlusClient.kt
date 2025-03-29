@@ -6,8 +6,10 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback
 import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.PlayerSkinDrawer
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.RenderTickCounter
+import net.minecraft.client.render.entity.LivingEntityRenderer
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
@@ -27,6 +29,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     private val PLAYER_MARK_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark")
     private val PLAYER_MARK_UP_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_up")
     private val PLAYER_MARK_DOWN_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_down")
+    private val PLAYER_MARK_WHITE_OUTLINE_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_white_outline")
 
     private val relativePositionsLock = ReentrantLock()
     private var lastUpdatePosition = Vec3d.ZERO
@@ -111,7 +114,8 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         relativePositionsLock.lock()
 
         for ((_, position) in relativePositions) {
-            val actualPosition = player.world.getPlayerByUuid(position.playerUuid)
+            val playerMarker = player.world.getPlayerByUuid(position.playerUuid)
+            val actualPosition = playerMarker
                 ?.getLerpedPos(tickCounter.getTickDelta(false))
             val direction = if (actualPosition != null) {
                 actualPosition.subtract(player.getLerpedPos(tickCounter.getTickDelta(false)))
@@ -130,7 +134,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             val rotationVec = player.getRotationVec(1f)
             val relativeAngle = -direction2d.angle(Vector2d(rotationVec.x, rotationVec.z)) * 180.0 / Math.PI
 
-            val horizontalFov = Utils.calculateHorizontalFov(
+            val horizontalFov = ColorUtils.calculateHorizontalFov(
                 verticalFov = client.options.fov.value,
                 width = context.scaledWindowWidth,
                 height = context.scaledWindowHeight
@@ -140,6 +144,17 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 continue
             }
 
+            val markX = x + (progress * barWidth.toFloat()).roundToInt() - 4
+
+            val showHeadIcon = config.showHeadsOnTab && client.options.playerListKey.isPressed
+
+            val playerListEntry = if (showHeadIcon) {
+                val playerList = client.networkHandler?.playerList ?: emptyList()
+                playerList.find { it.profile.id == position.playerUuid }
+            } else {
+                null
+            }
+
             val opacity = if (config.fadeMarkers) {
                 val dist = position.distance.coerceIn(config.fadeStart.toFloat(), config.fadeEnd.toFloat())
                 val fadeProgress = 1 - (dist - config.fadeStart) / (config.fadeEnd - config.fadeStart)
@@ -147,18 +162,40 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             } else {
                 255
             }
-            val color = (opacity shl 24) or Utils.uuidToColor(position.playerUuid)
+            val color = (opacity shl 24) or position.color
 
-            val markX = x + (progress * barWidth.toFloat()).roundToInt() - 4
-            context.drawGuiTexture(
-                /* renderLayers = */ RenderLayer::getGuiTextured,
-                /* sprite = */ PLAYER_MARK_TEXTURE,
-                /* x = */ markX,
-                /* y = */ y - 1,
-                /* width = */ 7,
-                /* height = */ 7,
-                /* color = */ color,
-            )
+            if (playerListEntry == null) {
+                context.drawGuiTexture(
+                    /* renderLayers = */ RenderLayer::getGuiTextured,
+                    /* sprite = */ PLAYER_MARK_TEXTURE,
+                    /* x = */ markX,
+                    /* y = */ y - 1,
+                    /* width = */ 7,
+                    /* height = */ 7,
+                    /* color = */ color,
+                )
+            } else {
+                context.drawGuiTexture(
+                    /* renderLayers = */ RenderLayer::getGuiTextured,
+                    /* sprite = */ PLAYER_MARK_WHITE_OUTLINE_TEXTURE,
+                    /* x = */ markX,
+                    /* y = */ y - 1,
+                    /* width = */ 7,
+                    /* height = */ 7,
+                    /* color = */ color,
+                )
+
+                PlayerSkinDrawer.draw(
+                    /* context = */ context,
+                    /* texture = */ playerListEntry.skinTextures.texture,
+                    /* x = */ markX + 1,
+                    /* y = */ y,
+                    /* size = */ 5,
+                    /* hatVisible = */ playerListEntry.shouldShowHat(),
+                    /* upsideDown = */ playerMarker?.let { LivingEntityRenderer.shouldFlipUpsideDown(it) } ?: false,
+                    /* color = */ -1
+                )
+            }
 
             if (config.showHeight) {
                 val heightDiffNormalized = direction.normalize().y

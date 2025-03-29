@@ -12,6 +12,8 @@ data class RelativePlayerLocation(
     val direction: Vector3f,
     /** Distance in blocks, zero if disabled by config */
     val distance: Float,
+    /** Mark color in 0xRRGGBB format. -1 for ColorMode.PLAYER_HEAD */
+    val color: Int,
 ) {
     companion object {
         val CODEC: PacketCodec<PacketByteBuf, RelativePlayerLocation> =
@@ -22,11 +24,13 @@ data class RelativePlayerLocation(
         playerUuid = buf.readUuid(),
         direction = buf.readVector3f(),
         distance = buf.readFloat(),
+        color = buf.readInt(),
     )
 
     fun write(buf: PacketByteBuf) {
         buf.writeUuid(playerUuid)
         buf.writeVector3f(direction)
         buf.writeFloat(distance)
+        buf.writeInt(color)
     }
 }
