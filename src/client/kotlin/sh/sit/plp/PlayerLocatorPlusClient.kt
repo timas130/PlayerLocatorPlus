@@ -143,15 +143,15 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         for ((_, position) in relativePositions) {
             val playerMarker = player.world.getPlayerByUuid(position.playerUuid)
             val actualPosition = playerMarker
-                ?.getLerpedPos(tickCounter.getTickDelta(false))
+                ?.getLerpedPos(tickCounter.getTickProgress(false))
             val direction = if (actualPosition != null) {
-                actualPosition.subtract(player.getLerpedPos(tickCounter.getTickDelta(false)))
+                actualPosition.subtract(player.getLerpedPos(tickCounter.getTickProgress(false)))
             } else if (position.distance == 0f) {
                 Vec3d(position.direction)
             } else {
                 val projectedPosition = lastUpdatePosition
                     .add(Vec3d(position.direction).multiply(position.distance.toDouble()))
-                projectedPosition.subtract(player.getLerpedPos(tickCounter.getTickDelta(false)))
+                projectedPosition.subtract(player.getLerpedPos(tickCounter.getTickProgress(false)))
             }
 
             val direction2d = Vector2d(direction.x, direction.z)

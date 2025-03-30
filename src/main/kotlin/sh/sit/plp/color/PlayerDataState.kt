@@ -1,53 +1,53 @@
 package sh.sit.plp.color
 
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.PersistentState
+import net.minecraft.world.PersistentStateType
 import sh.sit.plp.PlayerLocatorPlus
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
-class PlayerDataState() : PersistentState() {
+class PlayerDataState : PersistentState() {
     companion object {
-        private val TYPE = Type(
+        private val CODEC = NbtCompound.CODEC
+            .fieldOf("players")
+            .xmap({ playersNbt ->
+                val ret = hashMapOf<UUID, PlayerData>()
+                playersNbt.keys.forEach { k ->
+                    val playerNbt = playersNbt.getCompound(k).getOrNull()
+                    val playerData = PlayerData(
+                        customColor = playerNbt?.getInt("customColor")?.orElse(0xFFFFFF) ?: 0xFFFFFF,
+                    )
+                    ret[UUID.fromString(k)] = playerData
+                }
+                PlayerDataState().also {
+                    it.players = ret
+                }
+            }, { state ->
+                NbtCompound().also { ret ->
+                    state.players.forEach { (k, v) ->
+                        val playerNbt = NbtCompound()
+                        playerNbt.putInt("customColor", v.customColor)
+                        ret.put(k.toString(), playerNbt)
+                    }
+                }
+            })
+            .codec()
+
+        private val TYPE = PersistentStateType(
+            "${PlayerLocatorPlus.MOD_ID}-player_data",
             ::PlayerDataState,
-            ::PlayerDataState,
+            CODEC,
             null,
         )
 
         fun of(server: MinecraftServer): PlayerDataState {
-            return server.overworld.persistentStateManager.getOrCreate(
-                TYPE,
-                "${PlayerLocatorPlus.MOD_ID}-player_data",
-            )
+            return server.overworld.persistentStateManager.getOrCreate(TYPE)
         }
     }
 
-    private val players = hashMapOf<UUID, PlayerData>()
-
-    @Suppress("UNUSED_PARAMETER")
-    constructor(nbt: NbtCompound, registryLookup: RegistryWrapper.WrapperLookup) : this() {
-        val playersNbt = nbt.getCompound("players")
-        playersNbt.keys.forEach { k ->
-            val playerNbt = playersNbt.getCompound(k)
-            val playerData = PlayerData(
-                customColor = playerNbt.getInt("customColor")
-            )
-            players[UUID.fromString(k)] = playerData
-        }
-    }
-
-    override fun writeNbt(nbt: NbtCompound, registries: RegistryWrapper.WrapperLookup): NbtCompound {
-        val ret = NbtCompound()
-        players.forEach { (k, v) ->
-            val playerNbt = NbtCompound()
-            playerNbt.putInt("customColor", v.customColor)
-            ret.put(k.toString(), playerNbt)
-        }
-        nbt.put("players", ret)
-
-        return nbt
-    }
+    private var players = hashMapOf<UUID, PlayerData>()
 
     fun getPlayer(uuid: UUID): PlayerData {
         return players.getOrPut(uuid) {
