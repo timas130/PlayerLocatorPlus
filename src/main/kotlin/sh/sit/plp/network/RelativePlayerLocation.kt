@@ -12,7 +12,7 @@ data class RelativePlayerLocation(
     val direction: Vector3f,
     /** Distance in blocks, zero if disabled by config */
     val distance: Float,
-    /** Mark color in 0xRRGGBB format. -1 for ColorMode.PLAYER_HEAD */
+    /** Mark color in 0xRRGGBB format */
     val color: Int,
 ) {
     companion object {

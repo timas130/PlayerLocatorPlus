@@ -54,6 +54,9 @@ class ModConfig : ConfigData {
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var showHeadsOnTab = true
+    @ConfigEntry.Category("style")
+    @ConfigEntry.Gui.Tooltip
+    var showNamesOnTab = true
 
     @ConfigEntry.Category("color")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
