@@ -4,7 +4,7 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.codec.PacketCodec
 import net.minecraft.network.packet.CustomPayload
 import net.minecraft.util.Identifier
-import sh.sit.plp.ModConfig
+import sh.sit.plp.config.ModConfig
 import sh.sit.plp.PlayerLocatorPlus
 
 @JvmRecord

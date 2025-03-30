@@ -5,16 +5,23 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.PlayerSkinDrawer
 import net.minecraft.client.render.RenderTickCounter
+import net.minecraft.client.render.entity.LivingEntityRenderer
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 import org.joml.Vector2d
 import sh.sit.plp.PlayerLocatorPlus.config
+import sh.sit.plp.config.ConfigManagerClient
 import sh.sit.plp.network.PlayerLocationsS2CPayload
 import sh.sit.plp.network.RelativePlayerLocation
+import sh.sit.plp.util.Animatable
+import sh.sit.plp.util.MathUtils
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.math.abs
+import kotlin.math.round
 import kotlin.math.roundToInt
 
 object PlayerLocatorPlusClient : ClientModInitializer {
@@ -22,10 +29,28 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     private val PLAYER_MARK_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark")
     private val PLAYER_MARK_UP_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_up")
     private val PLAYER_MARK_DOWN_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_down")
+    private val PLAYER_MARK_WHITE_OUTLINE_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_white_outline")
+
+    private const val NAME_PLAQUE_PADDING_X = 4
+    private const val NAME_PLAQUE_PADDING_Y = 2
+    private const val NAME_PLAQUE_MARGIN = 2
+    private const val NAME_PLAQUE_OVERLAP_THRESHOLD = 2
+
+    private const val HUD_OFFSET_TOTAL = 16f
+    private var hudOffset = Animatable(0f)
+
+    // for mixin
+    val currentHudOffset get() = hudOffset.currentValue
 
     private val relativePositionsLock = ReentrantLock()
     private var lastUpdatePosition = Vec3d.ZERO
     private val relativePositions = mutableMapOf<UUID, RelativePlayerLocation>()
+
+    private data class NamePlaque(
+        val x: Int,
+        val playerName: String,
+        val progress: Double
+    )
 
     override fun onInitializeClient() {
         ConfigManagerClient.init()
@@ -70,8 +95,8 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         // hide when there are no other players online and relativePositions is empty
         if (
             !config.visibleEmpty &&
-            networkHandler?.playerList?.any { it.profile.id != player.uuid } != true &&
-            relativePositions.isEmpty()
+            relativePositions.isEmpty() &&
+            networkHandler?.playerList?.any { it.profile.id != player.uuid } != true
         ) {
             return false
         }
@@ -89,6 +114,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         val client = MinecraftClient.getInstance()
         if (!isBarVisible(client)) return
 
+        client.profiler.push("plp")
         val player = client.player ?: return
         val interactionManager = client.interactionManager ?: return
 
@@ -103,8 +129,13 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
         relativePositionsLock.lock()
 
+        val namePlaques = mutableListOf<NamePlaque>()
+
+        val isTabPressed = client.options.playerListKey.isPressed
+
         for ((_, position) in relativePositions) {
-            val actualPosition = player.world.getPlayerByUuid(position.playerUuid)
+            val playerMarker = player.world.getPlayerByUuid(position.playerUuid)
+            val actualPosition = playerMarker
                 ?.getLerpedPos(tickCounter.getTickDelta(false))
             val direction = if (actualPosition != null) {
                 actualPosition.subtract(player.getLerpedPos(tickCounter.getTickDelta(false)))
@@ -121,9 +152,12 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 continue
             }
             val rotationVec = player.getRotationVec(1f)
-            val relativeAngle = -direction2d.angle(Vector2d(rotationVec.x, rotationVec.z)) * 180.0 / Math.PI
+            var relativeAngle = -direction2d.angle(Vector2d(rotationVec.x, rotationVec.z)) * 180.0 / Math.PI
+            if (relativeAngle.isNaN()) {
+                relativeAngle = 0.0
+            }
 
-            val horizontalFov = Utils.calculateHorizontalFov(
+            val horizontalFov = MathUtils.calculateHorizontalFov(
                 verticalFov = client.options.fov.value,
                 width = context.scaledWindowWidth,
                 height = context.scaledWindowHeight
@@ -133,6 +167,13 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 continue
             }
 
+            val markX = x + (progress * barWidth.toFloat()).roundToInt() - 4
+
+            val showHeadIcon = config.showHeadsOnTab && isTabPressed
+
+            val playerList = client.networkHandler?.playerList ?: emptyList()
+            val playerListEntry = playerList.find { it.profile.id == position.playerUuid }
+
             val opacity = if (config.fadeMarkers) {
                 val dist = position.distance.coerceIn(config.fadeStart.toFloat(), config.fadeEnd.toFloat())
                 val fadeProgress = 1 - (dist - config.fadeStart) / (config.fadeEnd - config.fadeStart)
@@ -140,18 +181,50 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             } else {
                 255
             }
-            val color = (opacity shl 24) or Utils.uuidToColor(position.playerUuid)
+            val color = (opacity shl 24) or position.color
 
-            val markX = x + (progress * barWidth.toFloat()).roundToInt() - 4
-            context.drawGuiTexture(
-                texture = PLAYER_MARK_TEXTURE,
-                x = markX,
-                y = y - 1,
-                z = 0,
-                width = 7,
-                height = 7,
-                color = color,
-            )
+            // store marker information for name plaque rendering later
+            if (playerListEntry != null && config.showNamesOnTab) {
+                namePlaques.add(
+                    NamePlaque(
+                        x = markX,
+                        playerName = playerListEntry.profile.name,
+                        progress = progress
+                    )
+                )
+            }
+
+            if (playerListEntry == null || !showHeadIcon) {
+                context.drawGuiTexture(
+                    texture = PLAYER_MARK_TEXTURE,
+                    x = markX,
+                    y = y - 1,
+                    z = 0,
+                    width = 7,
+                    height = 7,
+                    color = color,
+                )
+            } else {
+                context.drawGuiTexture(
+                    texture = PLAYER_MARK_WHITE_OUTLINE_TEXTURE,
+                    x = markX,
+                    y = y - 1,
+                    z = 0,
+                    width = 7,
+                    height = 7,
+                    color = color,
+                )
+
+                PlayerSkinDrawer.draw(
+                    /* context = */ context,
+                    /* texture = */ playerListEntry.skinTextures.texture,
+                    /* x = */ markX + 1,
+                    /* y = */ y,
+                    /* size = */ 5,
+                    /* hatVisible = */ false,
+                    /* upsideDown = */ playerMarker?.let { LivingEntityRenderer.shouldFlipUpsideDown(it) } ?: false,
+                )
+            }
 
             if (config.showHeight) {
                 val heightDiffNormalized = direction.normalize().y
@@ -175,7 +248,88 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             }
         }
 
+        hudOffset.targetValue = if (isTabPressed && config.showNamesOnTab && namePlaques.isNotEmpty()) {
+            HUD_OFFSET_TOTAL
+        } else {
+            0f
+        }
+        hudOffset.updateValues(client.renderTime / 1000000f)
+
+        val fadeProgress = round(hudOffset.currentValue / HUD_OFFSET_TOTAL * 255f) / 255f
+
+        if (namePlaques.isNotEmpty() && fadeProgress > 0) {
+            client.profiler.push("plp-names")
+            renderPlayerNamePlaques(context, namePlaques, y, fadeProgress)
+            client.profiler.pop()
+        }
+
         relativePositionsLock.unlock()
+        client.profiler.pop()
+    }
+
+    private fun renderPlayerNamePlaques(
+        context: DrawContext,
+        markers: List<NamePlaque>,
+        barY: Int,
+        fadeProgress: Float = 1f
+    ) {
+        val textRenderer = MinecraftClient.getInstance().textRenderer
+
+        // sort markers by their distance from the center (closest first)
+        val sortedMarkers = markers.sortedBy {
+            abs(it.progress - 0.5)
+        }
+
+        // determine which markers should be visible
+        val visibleMarkers = mutableListOf<Pair<NamePlaque, IntRange>>()
+
+        for (marker in sortedMarkers) {
+            val textWidth = textRenderer.getWidth(marker.playerName)
+            val plaqueWidth = textWidth + NAME_PLAQUE_PADDING_X * 2
+
+            val plaqueX = marker.x - plaqueWidth / 2 + 4
+            val plaqueXRange = plaqueX..(plaqueX + plaqueWidth)
+
+            val overlap = visibleMarkers.any { (_, range) ->
+                range.first - NAME_PLAQUE_OVERLAP_THRESHOLD <= plaqueXRange.last &&
+                range.last + NAME_PLAQUE_OVERLAP_THRESHOLD >= plaqueXRange.first
+            }
+
+            if (!overlap) {
+                visibleMarkers.add(marker to plaqueXRange)
+            }
+        }
+
+        // render markers in visibleMarkers
+        for ((marker, _) in visibleMarkers) {
+            val textWidth = textRenderer.getWidth(marker.playerName)
+            val plaqueWidth = textWidth + NAME_PLAQUE_PADDING_X * 2
+            val plaqueHeight = textRenderer.fontHeight + NAME_PLAQUE_PADDING_Y * 2
+
+            val plaqueX = marker.x - plaqueWidth / 2 + 4
+            val plaqueY = barY - plaqueHeight - NAME_PLAQUE_MARGIN
+
+            val bgAlpha = (192 * fadeProgress).roundToInt()
+            val textAlpha = (255 * fadeProgress).roundToInt()
+
+            if (bgAlpha > 0) context.fill(
+                plaqueX,
+                plaqueY,
+                plaqueX + plaqueWidth,
+                plaqueY + plaqueHeight,
+                (bgAlpha shl 24)
+            )
+
+            // for some reason, if the opacity is under 4, drawText just assumes the color does not include alpha
+            if (textAlpha > 3) context.drawText(
+                textRenderer,
+                marker.playerName,
+                plaqueX + NAME_PLAQUE_PADDING_X,
+                plaqueY + NAME_PLAQUE_PADDING_Y,
+                (textAlpha shl 24) or 0xFFFFFF,
+                false
+            )
+        }
     }
 
     private fun DrawContext.drawGuiTexture(texture: Identifier, x: Int, y: Int, z: Int, width: Int, height: Int, color: Int) {
