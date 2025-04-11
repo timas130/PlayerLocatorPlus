@@ -9,7 +9,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import sh.sit.plp.PlayerLocatorPlusClient;
 
-@SuppressWarnings("UnusedMixin")
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
     @Inject(
@@ -39,6 +38,8 @@ public class InGameHudMixin {
         at = @At(value = "HEAD")
     )
     private void beforeRenderExperienceLevel(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        PlayerLocatorPlusClient.INSTANCE.render(context, tickCounter);
+
         float offset = PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset();
         if (offset > 0) {
             context.getMatrices().push();
