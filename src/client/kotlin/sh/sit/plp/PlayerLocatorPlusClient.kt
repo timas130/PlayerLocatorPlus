@@ -2,8 +2,6 @@ package sh.sit.plp
 
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback
-import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.PlayerSkinDrawer
@@ -80,9 +78,9 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             relativePositionsLock.unlock()
         }
 
-        HudLayerRegistrationCallback.EVENT.register(HudLayerRegistrationCallback { drawer ->
-            drawer.attachLayerBefore(IdentifiedLayer.EXPERIENCE_LEVEL, PLAYER_LOCATOR_LAYER, ::render)
-        })
+//        HudLayerRegistrationCallback.EVENT.register(HudLayerRegistrationCallback { drawer ->
+//            drawer.attachLayerBefore(IdentifiedLayer.EXPERIENCE_LEVEL, PLAYER_LOCATOR_LAYER, ::render)
+//        })
     }
 
     private fun isBarVisible(client: MinecraftClient): Boolean {
