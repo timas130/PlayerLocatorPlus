@@ -1,20 +1,10 @@
-package sh.sit.plp
+package sh.sit.plp.util
 
 import java.util.*
 import kotlin.math.abs
-import kotlin.math.atan
-import kotlin.math.tan
 import kotlin.random.Random
 
-object Utils {
-    fun calculateHorizontalFov(verticalFov: Int, width: Int, height: Int): Double {
-        // ffs
-        val fovRad = verticalFov / 2.0 * Math.PI / 180.0
-        val d = height / 2.0 / tan(fovRad)
-        val t = atan(width / 2.0 / d) * 2.0
-        return t / Math.PI * 180.0
-    }
-
+object ColorUtils {
     fun uuidToColor(uuid: UUID): Int {
         val random = Random(uuid.mostSignificantBits xor uuid.leastSignificantBits)
 

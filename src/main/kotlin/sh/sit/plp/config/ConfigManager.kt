@@ -1,25 +1,33 @@
-package sh.sit.plp
+package sh.sit.plp.config
 
 import me.shedaniel.autoconfig.AutoConfig
 import me.shedaniel.autoconfig.ConfigHolder
-import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.server.PlayerManager
 import net.minecraft.util.ActionResult
+import sh.sit.plp.PlayerLocatorPlus
 import sh.sit.plp.network.ModConfigS2CPayload
 
 object ConfigManager {
     private lateinit var config: ModConfig
     var configOverride: ModConfig? = null
+        set(value) {
+            if (value != null) {
+                configHolder.config = value
+            } else {
+                configHolder.config = config
+            }
+            field = value
+        }
 
     private lateinit var configHolder: ConfigHolder<ModConfig>
 
     private var playerManager: PlayerManager? = null
 
     fun init() {
-        AutoConfig.register(ModConfig::class.java, ::Toml4jConfigSerializer)
+        AutoConfig.register(ModConfig::class.java, ::KTomlConfigSerializer)
         configHolder = AutoConfig.getConfigHolder(ModConfig::class.java)
         config = configHolder.config
         configHolder.registerSaveListener { _, modConfig ->

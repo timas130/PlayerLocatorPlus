@@ -1,4 +1,4 @@
-package sh.sit.plp
+package sh.sit.plp.config
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
