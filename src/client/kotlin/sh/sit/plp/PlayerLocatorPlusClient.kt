@@ -2,7 +2,6 @@ package sh.sit.plp
 
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.PlayerSkinDrawer
@@ -74,8 +73,6 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             lastUpdatePosition = MinecraftClient.getInstance().player?.pos ?: Vec3d.ZERO
             relativePositionsLock.unlock()
         }
-
-        HudRenderCallback.EVENT.register(HudRenderCallback(::render))
     }
 
     private fun isBarVisible(client: MinecraftClient): Boolean {
