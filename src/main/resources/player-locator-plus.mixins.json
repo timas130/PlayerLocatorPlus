@@ -9,6 +9,8 @@
     "CommandTreeS2CPacketArgumentNodeMixin"
   ],
   "client": [
+    "AutoconfigGuiRegistryAccessMixin",
+    "InGameHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1
