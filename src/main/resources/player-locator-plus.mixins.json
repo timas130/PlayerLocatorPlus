@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "sh.sit.plp.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ArgumentCommandNodeMixin",
+    "ArgumentTypesMixin",
+    "CommandTreeS2CPacketArgumentNodeMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
