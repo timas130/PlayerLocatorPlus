@@ -3,13 +3,25 @@ package sh.sit.plp.color
 import com.mojang.brigadier.StringReader
 import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.context.CommandContext
+import com.mojang.brigadier.suggestion.SuggestionProvider
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.minecraft.command.CommandSource
+import net.minecraft.command.argument.serialize.ConstantArgumentSerializer
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
 
 class ColorArgumentType : ArgumentType<Int> {
+    companion object {
+        @JvmField
+        val SERIALIZER = ConstantArgumentSerializer.of(::ColorArgumentType)!!
+
+        @JvmField
+        val suggestionProvider = SuggestionProvider<CommandSource> { commandContext, suggestionsBuilder ->
+            ColorArgumentType().listSuggestions(commandContext, suggestionsBuilder)
+        }
+    }
+
     override fun parse(reader: StringReader): Int {
         val string = if (reader.peek() == '#') {
             reader.skip()
