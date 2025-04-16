@@ -9,11 +9,20 @@
 	],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/player-locator-plus",
-		"sources": "https://github.com/timas130/PlayerLocatorPlus"
+		"sources": "https://github.com/timas130/PlayerLocatorPlus",
+		"issues": "https://github.com/timas130/PlayerLocatorPlus/issues"
+	},
+	"custom": {
+		"modmenu": {
+			"update_checker": true
+		}
 	},
 	"license": "GPL-3.0-or-later",
 	"icon": "assets/player-locator-plus/icon.png",
 	"environment": "*",
+	"mixins": [
+		"player-locator-plus.mixins.json"
+	],
 	"accessWidener": "player-locator-plus.accesswidener",
 	"entrypoints": {
 		"main": [
