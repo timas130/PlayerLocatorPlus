@@ -21,7 +21,8 @@
 	"icon": "assets/player-locator-plus/icon.png",
 	"environment": "*",
 	"mixins": [
-		"player-locator-plus.mixins.json"
+		"player-locator-plus.mixins.json",
+		"player-locator-plus.client.mixins.json"
 	],
 	"entrypoints": {
 		"main": [

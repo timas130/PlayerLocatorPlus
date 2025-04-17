@@ -4,11 +4,10 @@
   "package": "sh.sit.plp.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ArgumentCommandNodeMixin",
-    "ArgumentTypesMixin",
-    "CommandTreeS2CPacketArgumentNodeMixin"
   ],
   "client": [
+    "AutoconfigGuiRegistryAccessMixin",
+    "InGameHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1
