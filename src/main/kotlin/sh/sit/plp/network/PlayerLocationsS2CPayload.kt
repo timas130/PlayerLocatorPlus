@@ -14,7 +14,7 @@ data class PlayerLocationsS2CPayload(
     val fullReset: Boolean,
 ) : FabricPacket {
     companion object {
-        val ID = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locations")
+        val ID = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locations_v2")
 
         val TYPE = PacketType.create(ID) { buf ->
             PlayerLocationsS2CPayload(

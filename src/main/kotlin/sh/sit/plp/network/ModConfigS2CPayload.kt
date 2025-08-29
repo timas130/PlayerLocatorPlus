@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.networking.v1.FabricPacket
 import net.fabricmc.fabric.api.networking.v1.PacketType
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Identifier
-import sh.sit.plp.ModConfig
+import sh.sit.plp.config.ModConfig
 import sh.sit.plp.PlayerLocatorPlus
 
 @JvmRecord

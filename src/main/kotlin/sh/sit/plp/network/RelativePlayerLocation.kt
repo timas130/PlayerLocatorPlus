@@ -12,12 +12,15 @@ data class RelativePlayerLocation(
     val direction: Vector3f,
     /** Distance in blocks, zero if disabled by config */
     val distance: Float,
+    /** Mark color in 0xRRGGBB format */
+    val color: Int,
 ) {
     companion object {
         val WRITER = PacketWriter<RelativePlayerLocation> { buf, self ->
             buf.writeUuid(self.playerUuid)
             buf.writeVector3f(self.direction)
             buf.writeFloat(self.distance)
+            buf.writeInt(self.color)
         }
 
         val READER = PacketReader { buf ->
@@ -25,6 +28,7 @@ data class RelativePlayerLocation(
                 playerUuid = buf.readUuid(),
                 direction = buf.readVector3f(),
                 distance = buf.readFloat(),
+                color = buf.readInt(),
             )
         }
     }
