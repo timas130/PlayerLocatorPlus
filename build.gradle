@@ -65,7 +65,7 @@ dependencies {
 	//       does NOT support hexadecimal numbers, which makes it very hard to specify colors
 	//       in the config. So we opt for a better library that actually implements the latest
 	//       version of the format.
-	includeAndExpose("com.akuleshov7:ktoml-core:0.5.2")
+	includeAndExpose("com.akuleshov7:ktoml-core:0.7.1")
 }
 
 processResources {
