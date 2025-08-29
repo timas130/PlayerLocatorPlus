@@ -174,7 +174,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
             val markX = x + (progress * barWidth.toFloat()).roundToInt() - 4
 
-            val showHeadIcon = config.showHeadsOnTab && isTabPressed
+            val showHeadIcon = config.alwaysShowHeads || (config.showHeadsOnTab && isTabPressed)
 
             val playerList = client.networkHandler?.playerList ?: emptyList()
             val playerListEntry = playerList.find { it.profile.id == position.playerUuid }

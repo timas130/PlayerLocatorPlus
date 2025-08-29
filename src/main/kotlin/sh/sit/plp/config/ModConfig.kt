@@ -52,6 +52,8 @@ class ModConfig : ConfigData {
     @ConfigEntry.Gui.Tooltip
     var showHeight = true
     @ConfigEntry.Category("style")
+    var alwaysShowHeads = false
+    @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var showHeadsOnTab = true
     @ConfigEntry.Category("style")
