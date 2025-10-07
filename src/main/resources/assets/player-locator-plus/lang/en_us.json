@@ -48,5 +48,6 @@
   "commands.player-locator-plus.color.non-single-player": "Only specify a single player",
   "commands.player-locator-plus.color.other": "%s's marker color was changed to %s",
   "commands.player-locator-plus.color.self": "Your marker color was changed to %s",
-  "commands.player-locator-plus.color.wrong-color-mode": "You must change the color mode config parameter to Custom to set a custom marker color"
+  "commands.player-locator-plus.color.wrong-color-mode": "You must change the color mode config parameter to Custom to set a custom marker color",
+  "tag.item.player-locator-plus.hiding_equipment": "PLP Hiding equipment"
 }
