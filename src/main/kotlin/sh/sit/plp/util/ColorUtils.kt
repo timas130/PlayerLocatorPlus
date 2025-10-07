@@ -2,6 +2,7 @@ package sh.sit.plp.util
 
 import java.util.*
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 object ColorUtils {
@@ -30,39 +31,39 @@ object ColorUtils {
 
         when (hueSegment) {
             0 -> {
-                r = Math.round(255 * (c + m))
-                g = Math.round(255 * (x + m))
-                b = Math.round(255 * m)
+                r = (255 * (c + m)).roundToInt()
+                g = (255 * (x + m)).roundToInt()
+                b = (255 * m).roundToInt()
             }
 
             1 -> {
-                r = Math.round(255 * (x + m))
-                g = Math.round(255 * (c + m))
-                b = Math.round(255 * m)
+                r = (255 * (x + m)).roundToInt()
+                g = (255 * (c + m)).roundToInt()
+                b = (255 * m).roundToInt()
             }
 
             2 -> {
-                r = Math.round(255 * m)
-                g = Math.round(255 * (c + m))
-                b = Math.round(255 * (x + m))
+                r = (255 * m).roundToInt()
+                g = (255 * (c + m)).roundToInt()
+                b = (255 * (x + m)).roundToInt()
             }
 
             3 -> {
-                r = Math.round(255 * m)
-                g = Math.round(255 * (x + m))
-                b = Math.round(255 * (c + m))
+                r = (255 * m).roundToInt()
+                g = (255 * (x + m)).roundToInt()
+                b = (255 * (c + m)).roundToInt()
             }
 
             4 -> {
-                r = Math.round(255 * (x + m))
-                g = Math.round(255 * m)
-                b = Math.round(255 * (c + m))
+                r = (255 * (x + m)).roundToInt()
+                g = (255 * m).roundToInt()
+                b = (255 * (c + m)).roundToInt()
             }
 
             5, 6 -> {
-                r = Math.round(255 * (c + m))
-                g = Math.round(255 * m)
-                b = Math.round(255 * (x + m))
+                r = (255 * (c + m)).roundToInt()
+                g = (255 * m).roundToInt()
+                b = (255 * (x + m)).roundToInt()
             }
         }
 

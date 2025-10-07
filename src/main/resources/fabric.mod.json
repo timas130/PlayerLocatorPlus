@@ -27,22 +27,13 @@
 	"accessWidener": "player-locator-plus.accesswidener",
 	"entrypoints": {
 		"main": [
-			{
-				"value": "sh.sit.plp.PlayerLocatorPlus",
-				"adapter": "kotlin"
-			}
+			"sh.sit.plp.PlayerLocatorPlus::INSTANCE"
 		],
 		"client": [
-			{
-				"value": "sh.sit.plp.PlayerLocatorPlusClient",
-				"adapter": "kotlin"
-			}
+			"sh.sit.plp.PlayerLocatorPlusClient::INSTANCE"
 		],
 		"modmenu": [
-			{
-				"value": "sh.sit.plp.ModMenuEntrypoint",
-				"adapter": "kotlin"
-			}
+			"sh.sit.plp.ModMenuEntrypoint::INSTANCE"
 		]
 	},
 	"depends": {
@@ -50,7 +41,6 @@
 		"minecraft": ">=1.21 <1.21.2",
 		"java": ">=21",
 		"fabric-api": "*",
-		"fabric-language-kotlin": "*",
 		"cloth-config": ">=15.0.140"
 	},
 	"suggests": {

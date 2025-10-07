@@ -37,6 +37,13 @@ object PLPCommand {
                 .then(CommandManager.literal("color")
                     .then(CommandManager.argument("color", ColorArgumentType())
                         .requires { it.isExecutedByPlayer }
+                        .suggests { _, builder ->
+                            // Fix for a weird bug on Forge (+Sinytra Connector).
+                            // It only includes the custom id in CommandTreeS2CPacket if customSuggestions != null,
+                            // whereas Fabric includes it if the id itself is not null.
+                            // See also: https://minecraft.wiki/w/Java_Edition_protocol/Command_data#Node_Format
+                            builder.buildFuture()
+                        }
                         .executes { c ->
                             runChangeColor(c, true)
                         }
