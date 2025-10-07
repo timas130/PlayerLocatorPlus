@@ -26,22 +26,13 @@
 	],
 	"entrypoints": {
 		"main": [
-			{
-				"value": "sh.sit.plp.PlayerLocatorPlus",
-				"adapter": "kotlin"
-			}
+			"sh.sit.plp.PlayerLocatorPlus::INSTANCE"
 		],
 		"client": [
-			{
-				"value": "sh.sit.plp.PlayerLocatorPlusClient",
-				"adapter": "kotlin"
-			}
+			"sh.sit.plp.PlayerLocatorPlusClient::INSTANCE"
 		],
 		"modmenu": [
-			{
-				"value": "sh.sit.plp.ModMenuEntrypoint",
-				"adapter": "kotlin"
-			}
+			"sh.sit.plp.ModMenuEntrypoint::INSTANCE"
 		]
 	},
 	"depends": {
@@ -49,7 +40,6 @@
 		"minecraft": "1.21.5",
 		"java": ">=21",
 		"fabric-api": "*",
-		"fabric-language-kotlin": "*",
 		"cloth-config": ">=17.0.144"
 	},
 	"suggests": {
