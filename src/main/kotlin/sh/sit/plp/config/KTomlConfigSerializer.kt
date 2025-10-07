@@ -2,13 +2,13 @@ package sh.sit.plp.config
 
 import com.akuleshov7.ktoml.Toml
 import com.akuleshov7.ktoml.TomlInputConfig
-import kotlinx.io.IOException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import me.shedaniel.autoconfig.annotation.Config
 import me.shedaniel.autoconfig.serializer.ConfigSerializer
 import me.shedaniel.autoconfig.serializer.ConfigSerializer.SerializationException
 import me.shedaniel.autoconfig.util.Utils
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 

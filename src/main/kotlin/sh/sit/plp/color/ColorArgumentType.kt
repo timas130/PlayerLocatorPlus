@@ -36,7 +36,7 @@ class ColorArgumentType : ArgumentType<Int> {
         } else if (string.startsWith('#') && string.length == 7) {
             try {
                 string.substring(1).toInt(16)
-            } catch (e: NumberFormatException) {
+            } catch (_: NumberFormatException) {
                 throw net.minecraft.command.argument.ColorArgumentType
                     .INVALID_COLOR_EXCEPTION.createWithContext(reader, string)
             }
