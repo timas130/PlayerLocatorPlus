@@ -49,6 +49,8 @@ class ModConfig : ConfigData {
     @ConfigEntry.Gui.Tooltip
     var showHeight = true
     @ConfigEntry.Category("style")
+    var alwaysShowHeads = false
+    @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var showHeadsOnTab = true
     @ConfigEntry.Category("style")
@@ -84,7 +86,7 @@ class ModConfig : ConfigData {
             PlayerLocatorPlus.logger.warn("invalid config: fadeEnd < 1 or fadeEnd <= fadeStart")
             fadeEnd = fadeStart + 1
         }
-        if (fadeEndOpacity < 0 || fadeEndOpacity > 1) {
+        if (fadeEndOpacity !in 0.0..1.0) {
             PlayerLocatorPlus.logger.warn("invalid config: fadeEndOpacity not in [0, 1]")
             fadeEndOpacity = 0.3f
         }
