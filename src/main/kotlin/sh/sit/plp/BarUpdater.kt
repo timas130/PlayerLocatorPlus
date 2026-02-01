@@ -33,7 +33,7 @@ object BarUpdater {
                     ModConfig.ColorMode.UUID -> ColorUtils.uuidToColor(player.uuid)
                     ModConfig.ColorMode.TEAM_COLOR -> player.teamColorValue
                     ModConfig.ColorMode.CONSTANT -> config.constantColor
-                    ModConfig.ColorMode.CUSTOM -> PlayerDataState.of(player.server).getPlayer(player.uuid).customColor
+                    ModConfig.ColorMode.CUSTOM -> PlayerDataState.of(player.server!!).getPlayer(player.uuid).customColor
                 }
             }
         }
@@ -52,7 +52,7 @@ object BarUpdater {
     }
 
     fun fullResend(player: ServerPlayerEntity) {
-        val playerList = player.serverWorld.players
+        val playerList = player.world.players
 
         val relativePositions = playerList.mapNotNull {
             if (it == player) return@mapNotNull null

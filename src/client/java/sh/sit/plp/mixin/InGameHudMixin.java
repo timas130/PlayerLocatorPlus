@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import sh.sit.plp.PlayerLocatorPlusClient;
 
 @Mixin(InGameHud.class)
@@ -18,8 +19,8 @@ public class InGameHudMixin {
     private void beforeRenderStatusBars(DrawContext context, CallbackInfo ci) {
         float offset = PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset();
         if (offset > 0) {
-            context.getMatrices().push();
-            context.getMatrices().translate(0.0f, -offset, 0.0f);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate(0.0f, -offset);
         }
     }
 
@@ -29,31 +30,31 @@ public class InGameHudMixin {
     )
     private void afterRenderStatusBars(DrawContext context, CallbackInfo ci) {
         if (PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset() > 0) {
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
         }
     }
 
     @Inject(
-        method = "renderExperienceLevel",
-        at = @At(value = "HEAD")
+        method = "renderMainHud",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;hasExperienceBar()Z")
     )
     private void beforeRenderExperienceLevel(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         PlayerLocatorPlusClient.INSTANCE.render(context, tickCounter);
 
         float offset = PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset();
         if (offset > 0) {
-            context.getMatrices().push();
-            context.getMatrices().translate(0.0f, -offset, 0.0f);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate(0.0f, -offset);
         }
     }
 
     @Inject(
-        method = "renderExperienceLevel",
-        at = @At(value = "RETURN")
+        method = "renderMainHud",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/bar/Bar;renderAddons(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/client/render/RenderTickCounter;)V")
     )
     private void afterRenderExperienceLevel(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset() > 0) {
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
         }
     }
 
@@ -64,8 +65,8 @@ public class InGameHudMixin {
     private void beforeRenderChat(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         float offset = PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset();
         if (offset > 0) {
-            context.getMatrices().push();
-            context.getMatrices().translate(0.0f, -offset, 0.0f);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate(0.0f, -offset);
         }
     }
 
@@ -75,7 +76,18 @@ public class InGameHudMixin {
     )
     private void afterRenderChat(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset() > 0) {
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
+        }
+    }
+
+    @Inject(
+        method = "getCurrentBarType",
+        at = @At(value = "RETURN"),
+        cancellable = true
+    )
+    private void getCurrentBarType(CallbackInfoReturnable<InGameHud.BarType> cir) {
+        if (cir.getReturnValue() == InGameHud.BarType.LOCATOR && PlayerLocatorPlusClient.INSTANCE.isBarVisible()) {
+            cir.setReturnValue(InGameHud.BarType.EXPERIENCE);
         }
     }
 }

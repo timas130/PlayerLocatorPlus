@@ -1,48 +1,49 @@
 {
-	"schemaVersion": 1,
-	"id": "player-locator-plus",
-	"version": "${version}",
-	"name": "Player Locator Plus",
-	"description": "Track other players' locations on your experience bar",
-	"authors": [
-		"sit <me@sit.sh>"
-	],
-	"contact": {
-		"homepage": "https://modrinth.com/mod/player-locator-plus",
-		"sources": "https://github.com/timas130/PlayerLocatorPlus",
-		"issues": "https://github.com/timas130/PlayerLocatorPlus/issues"
-	},
-	"custom": {
-		"modmenu": {
-			"update_checker": true
-		}
-	},
-	"license": "GPL-3.0-or-later",
-	"icon": "assets/player-locator-plus/icon.png",
-	"environment": "*",
-	"mixins": [
-		"player-locator-plus.mixins.json",
-		"player-locator-plus.client.mixins.json"
-	],
-	"entrypoints": {
-		"main": [
-			"sh.sit.plp.PlayerLocatorPlus::INSTANCE"
-		],
-		"client": [
-			"sh.sit.plp.PlayerLocatorPlusClient::INSTANCE"
-		],
-		"modmenu": [
-			"sh.sit.plp.ModMenuEntrypoint::INSTANCE"
-		]
-	},
-	"depends": {
-		"fabricloader": ">=0.16.10",
-		"minecraft": "1.21.5",
-		"java": ">=21",
-		"fabric-api": "*",
-		"cloth-config": ">=17.0.144"
-	},
-	"suggests": {
-		"modmenu": "*"
-	}
+  "schemaVersion": 1,
+  "id": "player-locator-plus",
+  "version": "${version}",
+  "name": "Player Locator Plus",
+  "description": "Track other players' locations on your experience bar",
+  "authors": [
+    "sit <me@sit.sh>"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/player-locator-plus",
+    "sources": "https://github.com/timas130/PlayerLocatorPlus",
+    "issues": "https://github.com/timas130/PlayerLocatorPlus/issues"
+  },
+  "custom": {
+    "modmenu": {
+      "update_checker": true
+    }
+  },
+  "license": "GPL-3.0-or-later",
+  "icon": "assets/player-locator-plus/icon.png",
+  "environment": "*",
+  "mixins": [
+    "player-locator-plus.mixins.json",
+    "player-locator-plus.client.mixins.json"
+  ],
+  "entrypoints": {
+    "main": [
+      "sh.sit.plp.PlayerLocatorPlus::INSTANCE"
+    ],
+    "client": [
+      "sh.sit.plp.PlayerLocatorPlusClient::INSTANCE"
+    ],
+    "modmenu": [
+      "sh.sit.plp.ModMenuEntrypoint::INSTANCE"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": ">=1.21.5 <=1.21.6",
+    "java": ">=21",
+    "fabric-api": "*",
+    "cloth-config": ">=19.0.147"
+  },
+  "accessWidener": "player-locator-plus.accesswidener",
+  "suggests": {
+    "modmenu": "*"
+  }
 }

@@ -1,8 +1,10 @@
 package sh.sit.plp
 
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.PlayerSkinDrawer
 import net.minecraft.client.render.RenderLayer
@@ -78,12 +80,16 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             relativePositionsLock.unlock()
         }
 
-//        HudLayerRegistrationCallback.EVENT.register(HudLayerRegistrationCallback { drawer ->
-//            drawer.attachLayerBefore(IdentifiedLayer.EXPERIENCE_LEVEL, PLAYER_LOCATOR_LAYER, ::render)
-//        })
+        ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
+            relativePositionsLock.lock()
+            relativePositions.clear()
+            relativePositionsLock.unlock()
+        }
     }
 
-    private fun isBarVisible(client: MinecraftClient): Boolean {
+    fun isBarVisible(): Boolean {
+        val client = MinecraftClient.getInstance()
+
         val player = client.player ?: return false
         val interactionManager = client.interactionManager ?: return false
         val inGameHud = client.inGameHud
@@ -116,9 +122,9 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     fun render(context: DrawContext, tickCounter: RenderTickCounter) {
         if (!config.visible) return
 
-        val client = MinecraftClient.getInstance()
-        if (!isBarVisible(client)) return
+        if (!isBarVisible()) return
 
+        val client = MinecraftClient.getInstance()
         Profilers.get().push("plp")
         val player = client.player ?: return
         val interactionManager = client.interactionManager ?: return
@@ -129,7 +135,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
         val barRendered = player.jumpingMount != null || interactionManager.hasExperienceBar()
         if (!barRendered) {
-            context.drawGuiTexture(RenderLayer::getGuiTextured, EXPERIENCE_BAR_BACKGROUND_TEXTURE, x, y, barWidth, 5)
+            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, EXPERIENCE_BAR_BACKGROUND_TEXTURE, x, y, barWidth, 5)
         }
 
         relativePositionsLock.lock()
@@ -201,7 +207,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
             if (playerListEntry == null || !showHeadIcon) {
                 context.drawGuiTexture(
-                    /* renderLayers = */ RenderLayer::getGuiTextured,
+                    /* pipeline = */ RenderPipelines.GUI_TEXTURED,
                     /* sprite = */ PLAYER_MARK_TEXTURE,
                     /* x = */ markX,
                     /* y = */ y - 1,
@@ -211,7 +217,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 )
             } else {
                 context.drawGuiTexture(
-                    /* renderLayers = */ RenderLayer::getGuiTextured,
+                    /* pipeline = */ RenderPipelines.GUI_TEXTURED,
                     /* sprite = */ PLAYER_MARK_WHITE_OUTLINE_TEXTURE,
                     /* x = */ markX,
                     /* y = */ y - 1,
@@ -236,7 +242,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 val heightDiffNormalized = direction.normalize().y
                 if (heightDiffNormalized > 0.5) { // about 45 deg
                     context.drawGuiTexture(
-                        /* renderLayers = */ RenderLayer::getGuiTextured,
+                        /* pipeline = */ RenderPipelines.GUI_TEXTURED,
                         /* sprite = */ PLAYER_MARK_UP_TEXTURE,
                         /* x = */ markX + 1,
                         /* y = */ y - 5,
@@ -245,7 +251,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                     )
                 } else if (heightDiffNormalized < -0.5) {
                     context.drawGuiTexture(
-                        /* renderLayers = */ RenderLayer::getGuiTextured,
+                        /* pipeline = */ RenderPipelines.GUI_TEXTURED,
                         /* sprite = */ PLAYER_MARK_DOWN_TEXTURE,
                         /* x = */ markX + 1,
                         /* y = */ y + 7,
