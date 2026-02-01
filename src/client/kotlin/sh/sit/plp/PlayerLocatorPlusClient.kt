@@ -162,7 +162,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             if (!direction2d.isFinite) {
                 continue
             }
-            val rotationVec = player.getRotationVec(1f)
+            val rotationVec = player.getRotationVec(tickCounter.getTickProgress(false))
             var relativeAngle = -direction2d.angle(Vector2d(rotationVec.x, rotationVec.z)) * 180.0 / Math.PI
             if (relativeAngle.isNaN()) {
                 relativeAngle = 0.0
