@@ -8,9 +8,7 @@ Track other players' locations on your experience bar like a compass!
 
 ## Marker colors
 
-Each player's color is determined randomly by their UUID.
-You cannot change your UUID (unless you're playing in offline mode); therefore,
-it's impossible to change your marker color.
+By default, each player's color is determined randomly by their UUID. There are other options in the config (see below).
 
 ## Distance fade
 
@@ -55,6 +53,13 @@ Server parameters:
   Default: `true`
 - `mobHeadsHide`: Whether wearing a mob/player head hides players from the locator. The exact list can be edited with a datapack by changing `data/player-locator-plus/tags/item/hiding_equipment.json` (see default [here](https://github.com/timas130/PlayerLocatorPlus/blob/main/src/main/resources/data/player-locator-plus/tags/item/hiding_equipment.json)). Default: `true`
 - `invisibilityHides`: Whether being invisible hides players from the locator. Default: `true`
+- `colorMode`: How to determine the color of the markers. Vanilla waypoints always override this setting. Available modes:
+  - `UUID` (default): Assign a random color based on the UUID of the player.
+  - `TEAM_COLOR`: Use the color of the player's team (or white)
+  - `CUSTOM`: Allow every player to assign a color with the `/plp color` command
+  - `CONSTANT`: Everyone has the same color from the `constantColor` option
+- `constantColor`: Color used when `colorMode` is `CONSTANT`. Default: `0xFFFFFF` (white)
+- `allowVanillaLocatorBar`: Allow sending waypoint to vanilla players without the mod.  Default: `true`
 
 Client parameters:
 
@@ -67,6 +72,10 @@ Client parameters:
 - `fadeEndOpacity`: The final opacity when/after `fadeEnd` is reached. Default: `0.3`
 - `showHeight`: Show little arrows above/below a marker if the height difference is significant.
   Default: `true`
+- `alwaysShowHeads`: Always show player heads, regardless of whether Tab is pressed. Default: `false`
+- `showHeadsOnTab`: Show player heads when Tab is pressed. Default: `true`
+- `showNamesOnTab`: Show player names when Tab is pressed. Default: `true`
+- `showVanillaWaypoints`: Show custom waypoints created by adding the `waypoint_transmit_range` attribute. Default: `true`
 
 ## Acknowledgements
 
