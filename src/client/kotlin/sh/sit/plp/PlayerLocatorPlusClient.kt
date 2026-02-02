@@ -373,7 +373,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                     client.renderTickCounter.getTickProgress(!tickManager.shouldSkipTick(ent))
                 }
             )
-            val yaw = client.gameRenderer.camera.cameraYaw + relativeYaw.toFloat()
+            val yaw = client.gameRenderer.camera.cameraYaw + relativeYaw
             val directionVector = Vector3f(
                 -MathHelper.sin(yaw * (MathHelper.PI / 180f)),
                 0f,

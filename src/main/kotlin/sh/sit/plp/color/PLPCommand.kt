@@ -6,7 +6,10 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.command.CommandSource
+import net.minecraft.command.DefaultPermissions
 import net.minecraft.command.argument.GameProfileArgumentType
+import net.minecraft.command.permission.Permission
+import net.minecraft.command.permission.Permissions
 import net.minecraft.server.PlayerConfigEntry
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
@@ -31,7 +34,7 @@ object PLPCommand {
                         Command.SINGLE_SUCCESS
                     })
                 .then(CommandManager.literal("random")
-                    .requires { it.isExecutedByPlayer && it.hasPermissionLevel(2) }
+                    .requires { it.isExecutedByPlayer && it.permissions.hasPermission(DefaultPermissions.ADMINS) }
                     .executes { c ->
                         c.source.player?.let { BarUpdater.sendFakePlayers(it) }
                         Command.SINGLE_SUCCESS
@@ -50,7 +53,7 @@ object PLPCommand {
                             runChangeColor(c, true)
                         }
                         .then(CommandManager.argument("player", GameProfileArgumentType.gameProfile())
-                            .requires { it.hasPermissionLevel(2) }
+                            .requires { it.permissions.hasPermission(DefaultPermissions.MODERATORS) }
                             .suggests { context, builder ->
                                 CommandSource.suggestMatching(
                                     context.source.server.playerManager.playerList.map { it.gameProfile.name },

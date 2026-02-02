@@ -33,7 +33,7 @@ object BarUpdater {
                     ModConfig.ColorMode.UUID -> ColorUtils.uuidToColor(player.uuid)
                     ModConfig.ColorMode.TEAM_COLOR -> player.teamColorValue
                     ModConfig.ColorMode.CONSTANT -> config.constantColor
-                    ModConfig.ColorMode.CUSTOM -> PlayerDataState.of(player.entityWorld.server).getPlayer(player.uuid).customColor
+                    ModConfig.ColorMode.CUSTOM -> PlayerDataState.of(player.entityWorld.server!!).getPlayer(player.uuid).customColor
                 }
             }
         }
