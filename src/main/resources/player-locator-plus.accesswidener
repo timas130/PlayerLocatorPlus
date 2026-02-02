@@ -1,2 +1,3 @@
 accessWidener v2 named
 accessible class net/minecraft/client/gui/hud/InGameHud$BarType
+accessible method net/minecraft/client/render/entity/LivingEntityRenderer shouldFlipUpsideDown (Ljava/lang/String;)Z

@@ -78,7 +78,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 }
             }
 
-            lastUpdatePosition = MinecraftClient.getInstance().player?.pos ?: Vec3d.ZERO
+            lastUpdatePosition = MinecraftClient.getInstance().player?.entityPos ?: Vec3d.ZERO
             relativePositionsLock.unlock()
         }
 
@@ -152,7 +152,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         val isTabPressed = client.options.playerListKey.isPressed
 
         for (position in (relativePositions.values.asSequence() + getVanillaWaypoints(client))) {
-            val playerMarker = player.world.getEntity(position.playerUuid)
+            val playerMarker = player.entityWorld.getEntity(position.playerUuid)
             val actualPosition = playerMarker
                 ?.getLerpedPos(tickCounter.getTickProgress(false))
             val direction = if (actualPosition != null) {
@@ -235,13 +235,13 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
                 PlayerSkinDrawer.draw(
                     /* context = */ context,
-                    /* texture = */ playerListEntry.skinTextures.texture,
+                    /* texture = */ playerListEntry.skinTextures.body.texturePath(),
                     /* x = */ markX + 1,
                     /* y = */ y,
                     /* size = */ 5,
                     /* hatVisible = */ playerListEntry.shouldShowHat(),
                     /* upsideDown = */ (playerMarker as? LivingEntity)
-                        ?.let { LivingEntityRenderer.shouldFlipUpsideDown(it) }
+                        ?.let { LivingEntityRenderer.shouldFlipUpsideDown(it.name.string) }
                         ?: false,
                     /* color = */ -1
                 )
@@ -365,7 +365,14 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             })
             if (relativePositions.contains(uuid)) return@forEachWaypoint
 
-            val relativeYaw = waypoint.getRelativeYaw(client.world, client.gameRenderer.camera)
+            val tickManager = client.world!!.tickManager
+            val relativeYaw = waypoint.getRelativeYaw(
+                /* world = */ client.world,
+                /* yawProvider = */ client.gameRenderer.camera,
+                /* tickProgress = */ { ent ->
+                    client.renderTickCounter.getTickProgress(!tickManager.shouldSkipTick(ent))
+                }
+            )
             val yaw = client.gameRenderer.camera.cameraYaw + relativeYaw.toFloat()
             val directionVector = Vector3f(
                 -MathHelper.sin(yaw * (MathHelper.PI / 180f)),

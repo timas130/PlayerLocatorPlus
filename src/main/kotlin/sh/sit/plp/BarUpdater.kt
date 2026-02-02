@@ -25,7 +25,7 @@ object BarUpdater {
         val world: World,
         val color: Int,
     ) {
-        constructor(player: ServerPlayerEntity) : this(player.pos, player.world, calculateColor(player))
+        constructor(player: ServerPlayerEntity) : this(player.entityPos, player.entityWorld, calculateColor(player))
 
         companion object {
             fun calculateColor(player: ServerPlayerEntity): Int {
@@ -33,7 +33,7 @@ object BarUpdater {
                     ModConfig.ColorMode.UUID -> ColorUtils.uuidToColor(player.uuid)
                     ModConfig.ColorMode.TEAM_COLOR -> player.teamColorValue
                     ModConfig.ColorMode.CONSTANT -> config.constantColor
-                    ModConfig.ColorMode.CUSTOM -> PlayerDataState.of(player.server!!).getPlayer(player.uuid).customColor
+                    ModConfig.ColorMode.CUSTOM -> PlayerDataState.of(player.entityWorld.server).getPlayer(player.uuid).customColor
                 }
             }
         }
@@ -52,12 +52,12 @@ object BarUpdater {
     }
 
     fun fullResend(player: ServerPlayerEntity) {
-        val playerList = player.world.players
+        val playerList = player.entityWorld.players
 
         val relativePositions = playerList.mapNotNull {
             if (it == player) return@mapNotNull null
 
-            val distance = player.pos.distanceTo(it.pos).toFloat()
+            val distance = player.entityPos.distanceTo(it.entityPos).toFloat()
             if (config.maxDistance != 0 && distance > config.maxDistance) return@mapNotNull null
 
             calculateRelativeLocation(it.uuid, StoredPlayerPosition(player), StoredPlayerPosition(it))
@@ -97,7 +97,7 @@ object BarUpdater {
                 // If the player left our current dimension or the Game
                 if (
                     prevPos.world != curPos?.world &&
-                    player.world == prevPos.world
+                    player.entityWorld == prevPos.world
                 ) {
                     // ... remove them from the bar
                     removeUuids.add(uuid)
@@ -105,7 +105,7 @@ object BarUpdater {
 
                 // If we left the dimension the other player was in
                 if (
-                    previousPlayer?.world != player.world &&
+                    previousPlayer?.world != player.entityWorld &&
                     previousPlayer?.world == curPos?.world
                 ) {
                     // ... remove them from the bar
@@ -116,12 +116,12 @@ object BarUpdater {
                 if (
                     curPos != null &&
                     previousPlayer != null &&
-                    curPos.world == player.world &&
+                    curPos.world == player.entityWorld &&
                     curPos.world == prevPos.world &&
                     maxDistance != 0
                 ) {
                     val previousDistance = previousPlayer.pos.distanceTo(prevPos.pos)
-                    val currentDistance = player.pos.distanceTo(curPos.pos)
+                    val currentDistance = player.entityPos.distanceTo(curPos.pos)
 
                     if (currentDistance > maxDistance && previousDistance <= maxDistance) {
                         // ... remove them from the bar
@@ -137,7 +137,7 @@ object BarUpdater {
                 if (uuid == player.uuid) continue
 
                 // don't update if different dimensions
-                if (curPos.world != player.world) continue
+                if (curPos.world != player.entityWorld) continue
 
                 val previousRelativeLocation = previousPositions[uuid]?.let { prevPos ->
                     previousPlayer?.let { prevPlayer ->
@@ -150,13 +150,13 @@ object BarUpdater {
                 if (previousRelativeLocation == currentRelativeLocation) continue
 
                 // don't update position if we're too far
-                val currentDistance = player.pos.distanceTo(curPos.pos)
+                val currentDistance = player.entityPos.distanceTo(curPos.pos)
                 if (maxDistance != 0 && currentDistance > maxDistance) continue
 
                 updatedPositions.add(currentRelativeLocation)
             }
 
-            val fullReset = previousPlayer?.world != player.world
+            val fullReset = previousPlayer?.world != player.entityWorld
 
             if (updatedPositions.isEmpty() && removeUuids.isEmpty()) continue
 

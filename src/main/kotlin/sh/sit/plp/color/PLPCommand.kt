@@ -1,11 +1,13 @@
 package sh.sit.plp.color
 
+import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.command.CommandSource
 import net.minecraft.command.argument.GameProfileArgumentType
+import net.minecraft.server.PlayerConfigEntry
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
@@ -61,6 +63,10 @@ object PLPCommand {
         })
     }
 
+    private fun PlayerConfigEntry.toGameProfile(): GameProfile {
+        return GameProfile(id, name)
+    }
+
     private fun runChangeColor(c: CommandContext<ServerCommandSource>, self: Boolean): Int {
         if (PlayerLocatorPlus.config.colorMode != ModConfig.ColorMode.CUSTOM) {
             throw WRONG_COLOR_MODE.create()
@@ -70,7 +76,7 @@ object PLPCommand {
             c.source.playerOrThrow.gameProfile
         } else {
             val players = GameProfileArgumentType.getProfileArgument(c, "player")
-            players.singleOrNull() ?: throw NON_SINGLE_PLAYER.create()
+            players.singleOrNull()?.toGameProfile() ?: throw NON_SINGLE_PLAYER.create()
         }
 
         val color = c.getArgument("color", Int::class.java)
