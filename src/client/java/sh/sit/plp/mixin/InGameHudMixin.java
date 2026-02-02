@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import sh.sit.plp.PlayerLocatorPlusClient;
-import sh.sit.plp.config.ConfigManager;
 
 import java.util.Objects;
 
