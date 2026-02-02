@@ -6,7 +6,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.PlayerSkinDrawer
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.render.entity.LivingEntityRenderer
 import net.minecraft.entity.LivingEntity
@@ -26,15 +25,11 @@ import sh.sit.plp.util.MathUtils
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.math.abs
-import kotlin.math.cos
 import kotlin.math.round
 import kotlin.math.roundToInt
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 object PlayerLocatorPlusClient : ClientModInitializer {
-    private val PLAYER_LOCATOR_LAYER = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locator")
-
     private val EXPERIENCE_BAR_BACKGROUND_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/empty_bar")
     private val PLAYER_MARK_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark")
     private val PLAYER_MARK_UP_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_up")
