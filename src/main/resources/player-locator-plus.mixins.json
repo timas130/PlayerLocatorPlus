@@ -6,7 +6,8 @@
   "mixins": [
     "ArgumentCommandNodeMixin",
     "ArgumentTypesMixin",
-    "CommandTreeS2CPacketArgumentNodeMixin"
+    "CommandTreeS2CPacketArgumentNodeMixin",
+    "ServerCommonNetworkHandlerMixin"
   ],
   "client": [
   ],

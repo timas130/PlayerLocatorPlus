@@ -1,5 +1,6 @@
 package sh.sit.plp
 
+import com.mojang.datafixers.util.Either
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
@@ -10,11 +11,14 @@ import net.minecraft.client.gui.PlayerSkinDrawer
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.render.entity.LivingEntityRenderer
+import net.minecraft.entity.LivingEntity
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.profiler.Profilers
 import net.minecraft.world.GameMode
 import org.joml.Vector2d
+import org.joml.Vector3f
 import sh.sit.plp.PlayerLocatorPlus.config
 import sh.sit.plp.config.ConfigManagerClient
 import sh.sit.plp.network.PlayerLocationsS2CPayload
@@ -24,8 +28,11 @@ import sh.sit.plp.util.MathUtils
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.round
 import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 object PlayerLocatorPlusClient : ClientModInitializer {
     private val PLAYER_LOCATOR_LAYER = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locator")
@@ -107,12 +114,17 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         if (
             !config.visibleEmpty &&
             relativePositions.isEmpty() &&
-            networkHandler?.playerList?.any { it.profile.id != player.uuid } != true
+            networkHandler?.playerList?.any { it.profile.id != player.uuid } != true &&
+            getVanillaWaypoints(client).isEmpty()
         ) {
             return false
         }
         // hide in spectator mode when the spectator menu is not open
-        if (interactionManager.currentGameMode == GameMode.SPECTATOR && !inGameHud.spectatorHud.isOpen) {
+        if (
+            interactionManager.currentGameMode == GameMode.SPECTATOR &&
+            !inGameHud.spectatorHud.isOpen &&
+            !config.alwaysVisibleInSpectator
+        ) {
             return false
         }
 
@@ -144,8 +156,8 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
         val isTabPressed = client.options.playerListKey.isPressed
 
-        for ((_, position) in relativePositions) {
-            val playerMarker = player.world.getPlayerByUuid(position.playerUuid)
+        for (position in (relativePositions.values.asSequence() + getVanillaWaypoints(client))) {
+            val playerMarker = player.world.getEntity(position.playerUuid)
             val actualPosition = playerMarker
                 ?.getLerpedPos(tickCounter.getTickProgress(false))
             val direction = if (actualPosition != null) {
@@ -192,7 +204,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             } else {
                 255
             }
-            val color = (opacity shl 24) or position.color
+            val color = (opacity shl 24) or (position.color and 0xFFFFFF)
 
             // store marker information for name plaque rendering later
             if (playerListEntry != null && config.showNamesOnTab) {
@@ -233,7 +245,9 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                     /* y = */ y,
                     /* size = */ 5,
                     /* hatVisible = */ playerListEntry.shouldShowHat(),
-                    /* upsideDown = */ playerMarker?.let { LivingEntityRenderer.shouldFlipUpsideDown(it) } ?: false,
+                    /* upsideDown = */ (playerMarker as? LivingEntity)
+                        ?.let { LivingEntityRenderer.shouldFlipUpsideDown(it) }
+                        ?: false,
                     /* color = */ -1
                 )
             }
@@ -344,5 +358,40 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 false
             )
         }
+    }
+
+    private fun getVanillaWaypoints(client: MinecraftClient): List<RelativePlayerLocation> {
+        if (!config.showVanillaWaypoints) return emptyList()
+
+        val ret = mutableListOf<RelativePlayerLocation>()
+        client.networkHandler?.waypointHandler?.forEachWaypoint(client.cameraEntity) { waypoint ->
+            val uuid = Either.unwrap(waypoint.source.mapRight {
+                UUID.nameUUIDFromBytes("plp-waypoint:$it".toByteArray())
+            })
+            if (relativePositions.contains(uuid)) return@forEachWaypoint
+
+            val relativeYaw = waypoint.getRelativeYaw(client.world, client.gameRenderer.camera)
+            val yaw = client.gameRenderer.camera.cameraYaw + relativeYaw.toFloat()
+            val directionVector = Vector3f(
+                -MathHelper.sin(yaw * (MathHelper.PI / 180f)),
+                0f,
+                MathHelper.cos(yaw * (MathHelper.PI / 180f))
+            ).normalize()
+
+            var distance = waypoint.squaredDistanceTo(client.cameraEntity)
+            if (distance == Double.POSITIVE_INFINITY) {
+                // vanilla thinks the distance is +infinity when the waypoint is >322 blocks away
+                // 110224 = 332^2
+                distance = 110224.0
+            }
+
+            ret.add(RelativePlayerLocation(
+                playerUuid = uuid,
+                direction = directionVector,
+                distance = sqrt(distance).toFloat(),
+                color = waypoint.config.color.orElse(config.constantColor),
+            ))
+        }
+        return ret
     }
 }

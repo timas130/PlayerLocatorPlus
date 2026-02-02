@@ -1,17 +1,33 @@
 package sh.sit.plp.mixin;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.gui.hud.SpectatorHud;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.world.GameMode;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import sh.sit.plp.PlayerLocatorPlusClient;
+import sh.sit.plp.config.ConfigManager;
+
+import java.util.Objects;
 
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
+    @Shadow
+    @Final
+    private MinecraftClient client;
+
+    @Shadow
+    @Final
+    private SpectatorHud spectatorHud;
+
     @Inject(
         method = "renderStatusBars",
         at = @At(value = "HEAD")
@@ -86,8 +102,27 @@ public class InGameHudMixin {
         cancellable = true
     )
     private void getCurrentBarType(CallbackInfoReturnable<InGameHud.BarType> cir) {
-        if (cir.getReturnValue() == InGameHud.BarType.LOCATOR && PlayerLocatorPlusClient.INSTANCE.isBarVisible()) {
-            cir.setReturnValue(InGameHud.BarType.EXPERIENCE);
+        // we hide the vanilla locator bar (so we can draw our own) when our bar should be visible
+        // OR when the spectator menu is not open.
+        // the vanilla locator bar is visible in spectator without the menu, while our users don't
+        // want that (and I agree): https://github.com/timas130/PlayerLocatorPlus/issues/10
+        boolean hideVanillaBarInSpectator =
+            Objects.requireNonNull(this.client.interactionManager).getCurrentGameMode() == GameMode.SPECTATOR
+            && !this.spectatorHud.isOpen();
+        if (
+            cir.getReturnValue() == InGameHud.BarType.LOCATOR
+            && (
+                PlayerLocatorPlusClient.INSTANCE.isBarVisible()
+                || hideVanillaBarInSpectator
+            )
+        ) {
+            // we don't need to account for the jump bar here, because the locator bar never
+            // replaces it in vanilla code
+            if (this.client.interactionManager.hasExperienceBar()) {
+                cir.setReturnValue(InGameHud.BarType.EXPERIENCE);
+            } else {
+                cir.setReturnValue(InGameHud.BarType.EMPTY);
+            }
         }
     }
 }
