@@ -38,6 +38,8 @@ class ModConfig : ConfigData {
     @ConfigEntry.Category("style")
     var visibleEmpty = false
     @ConfigEntry.Category("style")
+    var alwaysVisibleInSpectator = false
+    @ConfigEntry.Category("style")
     var acceptServerConfig = true
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
@@ -68,6 +70,12 @@ class ModConfig : ConfigData {
     @ConfigEntry.Gui.Tooltip
     @TomlInteger(IntegerRepresentation.HEX)
     var constantColor = 0xFFFFFF
+
+    @ConfigEntry.Category("vanilla")
+    var showVanillaWaypoints = true
+    @ConfigEntry.Category("vanilla")
+    @ConfigEntry.Gui.Tooltip
+    var allowVanillaLocatorBar = true
 
     enum class ColorMode(private val key: String) : Translatable {
         UUID("uuid"),
