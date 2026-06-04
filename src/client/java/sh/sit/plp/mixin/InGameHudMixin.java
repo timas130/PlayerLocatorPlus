@@ -1,11 +1,11 @@
 package sh.sit.plp.mixin;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.gui.hud.SpectatorHud;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.world.GameMode;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.spectator.SpectatorGui;
+import net.minecraft.world.level.GameType;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,110 +17,129 @@ import sh.sit.plp.PlayerLocatorPlusClient;
 
 import java.util.Objects;
 
-@Mixin(InGameHud.class)
-public class InGameHudMixin {
-    @Shadow
-    @Final
-    private MinecraftClient client;
+@Mixin(Gui.class)
+public class InGameHudMixin
+{
 
     @Shadow
     @Final
-    private SpectatorHud spectatorHud;
+    private Minecraft minecraft;
+
+    @Shadow
+    @Final
+    private SpectatorGui spectatorGui;
 
     @Inject(
-        method = "renderStatusBars",
-        at = @At(value = "HEAD")
+            method = "extractPlayerHealth",
+            at = @At(value = "HEAD")
     )
-    private void beforeRenderStatusBars(DrawContext context, CallbackInfo ci) {
+    private void beforeRenderStatusBars(GuiGraphicsExtractor graphics, CallbackInfo ci)
+    {
         float offset = PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset();
-        if (offset > 0) {
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate(0.0f, -offset);
+        if (offset > 0)
+        {
+            graphics.pose().pushMatrix();
+            graphics.pose().translate(0.0f, -offset);
         }
     }
 
     @Inject(
-        method = "renderStatusBars",
-        at = @At(value = "RETURN")
+            method = "extractPlayerHealth",
+            at = @At(value = "RETURN")
     )
-    private void afterRenderStatusBars(DrawContext context, CallbackInfo ci) {
-        if (PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset() > 0) {
-            context.getMatrices().popMatrix();
+    private void afterRenderStatusBars(GuiGraphicsExtractor graphics, CallbackInfo ci)
+    {
+        if (PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset() > 0)
+        {
+            graphics.pose().popMatrix();
         }
     }
 
     @Inject(
-        method = "renderMainHud",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;hasExperienceBar()Z")
+            method = "extractHotbarAndDecorations",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;hasExperience()Z")
     )
-    private void beforeRenderExperienceLevel(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        PlayerLocatorPlusClient.INSTANCE.render(context, tickCounter);
+    private void beforeRenderExperienceLevel(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci)
+    {
+        PlayerLocatorPlusClient.INSTANCE.render(graphics, deltaTracker);
 
         float offset = PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset();
-        if (offset > 0) {
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate(0.0f, -offset);
+        if (offset > 0)
+        {
+            graphics.pose().pushMatrix();
+            graphics.pose().translate(0.0f, -offset);
         }
     }
 
     @Inject(
-        method = "renderMainHud",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/bar/Bar;renderAddons(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/client/render/RenderTickCounter;)V")
+            method = "extractHotbarAndDecorations",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/contextualbar/ContextualBarRenderer;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V")
     )
-    private void afterRenderExperienceLevel(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset() > 0) {
-            context.getMatrices().popMatrix();
+    private void afterRenderExperienceLevel(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci)
+    {
+        if (PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset() > 0)
+        {
+            graphics.pose().popMatrix();
         }
     }
 
     @Inject(
-        method = "renderChat",
-        at = @At(value = "HEAD")
+            method = "extractHotbarAndDecorations",
+            at = @At(value = "HEAD")
     )
-    private void beforeRenderChat(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+    private void beforeRenderChat(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci)
+    {
         float offset = PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset();
-        if (offset > 0) {
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate(0.0f, -offset);
+        if (offset > 0)
+        {
+            graphics.pose().pushMatrix();
+            graphics.pose().translate(0.0f, -offset);
         }
     }
 
     @Inject(
-        method = "renderChat",
-        at = @At(value = "RETURN")
+            method = "extractChat",
+            at = @At(value = "RETURN")
     )
-    private void afterRenderChat(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset() > 0) {
-            context.getMatrices().popMatrix();
+    private void afterRenderChat(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci)
+    {
+        if (PlayerLocatorPlusClient.INSTANCE.getCurrentHudOffset() > 0)
+        {
+            graphics.pose().popMatrix();
         }
     }
 
     @Inject(
-        method = "getCurrentBarType",
-        at = @At(value = "RETURN"),
-        cancellable = true
+            method = "nextContextualInfoState",
+            at = @At(value = "RETURN"),
+            cancellable = true
     )
-    private void getCurrentBarType(CallbackInfoReturnable<InGameHud.BarType> cir) {
+    private void getCurrentBarType(CallbackInfoReturnable<Gui.ContextualInfo> cir)
+    {
         // we hide the vanilla locator bar (so we can draw our own) when our bar should be visible
         // OR when the spectator menu is not open.
         // the vanilla locator bar is visible in spectator without the menu, while our users don't
         // want that (and I agree): https://github.com/timas130/PlayerLocatorPlus/issues/10
         boolean hideVanillaBarInSpectator =
-            Objects.requireNonNull(this.client.interactionManager).getCurrentGameMode() == GameMode.SPECTATOR
-            && !this.spectatorHud.isOpen();
+                Objects.requireNonNull(this.minecraft.gameMode).getPlayerMode() == GameType.SPECTATOR
+                        && !this.spectatorGui.isMenuActive();
         if (
-            cir.getReturnValue() == InGameHud.BarType.LOCATOR
-            && (
-                PlayerLocatorPlusClient.INSTANCE.isBarVisible()
-                || hideVanillaBarInSpectator
-            )
-        ) {
+                cir.getReturnValue() == Gui.ContextualInfo.LOCATOR
+                        && (
+                        PlayerLocatorPlusClient.INSTANCE.isBarVisible()
+                                || hideVanillaBarInSpectator
+                )
+        )
+        {
             // we don't need to account for the jump bar here, because the locator bar never
             // replaces it in vanilla code
-            if (this.client.interactionManager.hasExperienceBar()) {
-                cir.setReturnValue(InGameHud.BarType.EXPERIENCE);
-            } else {
-                cir.setReturnValue(InGameHud.BarType.EMPTY);
+            if (this.minecraft.gameMode.hasExperience())
+            {
+                cir.setReturnValue(Gui.ContextualInfo.EXPERIENCE);
+            }
+            else
+            {
+                cir.setReturnValue(Gui.ContextualInfo.EMPTY);
             }
         }
     }

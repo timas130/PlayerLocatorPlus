@@ -12,12 +12,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import sh.sit.plp.color.ColorArgumentType;
 
 @Mixin(value = ArgumentCommandNode.class, remap = false)
-public class ArgumentCommandNodeMixin<S, T> {
-    @Shadow @Final private ArgumentType<T> type;
+public class ArgumentCommandNodeMixin<S, T>
+{
+    @Shadow
+    @Final
+    private ArgumentType<T> type;
 
     @Inject(method = "getCustomSuggestions", at = @At("HEAD"), cancellable = true)
-    void getCustomSuggestions(CallbackInfoReturnable<SuggestionProvider<S>> cir) {
-        if (this.type instanceof ColorArgumentType) {
+    void getCustomSuggestions(CallbackInfoReturnable<SuggestionProvider<S>> cir)
+    {
+        if (this.type instanceof ColorArgumentType)
+        {
             //noinspection unchecked
             cir.setReturnValue((SuggestionProvider<S>) ColorArgumentType.suggestionProvider);
         }

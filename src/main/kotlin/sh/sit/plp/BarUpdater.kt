@@ -1,13 +1,13 @@
 package sh.sit.plp
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.Level
+import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import sh.sit.plp.PlayerLocatorPlus.config
 import sh.sit.plp.color.PlayerDataState
@@ -21,19 +21,20 @@ import kotlin.random.Random
 
 object BarUpdater {
     private data class StoredPlayerPosition(
-        val pos: Vec3d,
-        val world: World,
+        val pos: Vec3,
+        val world: Level,
         val color: Int,
     ) {
-        constructor(player: ServerPlayerEntity) : this(player.entityPos, player.entityWorld, calculateColor(player))
+        constructor(player: ServerPlayer) : this(player.position(), player.level(), calculateColor(player))
 
         companion object {
-            fun calculateColor(player: ServerPlayerEntity): Int {
+            fun calculateColor(player: ServerPlayer): Int {
                 return when (config.colorMode) {
                     ModConfig.ColorMode.UUID -> ColorUtils.uuidToColor(player.uuid)
-                    ModConfig.ColorMode.TEAM_COLOR -> player.teamColorValue
-                    ModConfig.ColorMode.CONSTANT -> config.constantColor
-                    ModConfig.ColorMode.CUSTOM -> PlayerDataState.of(player.entityWorld.server!!).getPlayer(player.uuid).customColor
+                    ModConfig.ColorMode.TEAM_COLOR -> player.teamColor
+                    ModConfig.ColorMode.CUSTOM -> config.constantColor
+                    ModConfig.ColorMode.CONSTANT -> PlayerDataState.of(player.level().server)
+                        ?.getPlayer(player.uuid)?.customColor ?: 0
                 }
             }
         }
@@ -46,18 +47,18 @@ object BarUpdater {
     }
 
     fun fullResend(server: MinecraftServer) {
-        server.playerManager.playerList.forEach {
+        server.playerList.players.forEach {
             fullResend(it)
         }
     }
 
-    fun fullResend(player: ServerPlayerEntity) {
-        val playerList = player.entityWorld.players
+    fun fullResend(player: ServerPlayer) {
+        val playerList = player.level().players()
 
         val relativePositions = playerList.mapNotNull {
             if (it == player) return@mapNotNull null
 
-            val distance = player.entityPos.distanceTo(it.entityPos).toFloat()
+            val distance = player.position().distanceTo(it.position()).toFloat()
             if (config.maxDistance != 0 && distance > config.maxDistance) return@mapNotNull null
 
             calculateRelativeLocation(it.uuid, StoredPlayerPosition(player), StoredPlayerPosition(it))
@@ -83,7 +84,7 @@ object BarUpdater {
         val currentPositions = getPositions(server)
 
         // Send the update packets:
-        for (player in server.playerManager.playerList) {
+        for (player in server.playerList.players) {
             val previousPlayer = previousPositions[player.uuid]
 
             val maxDistance = config.maxDistance
@@ -97,7 +98,7 @@ object BarUpdater {
                 // If the player left our current dimension or the Game
                 if (
                     prevPos.world != curPos?.world &&
-                    player.entityWorld == prevPos.world
+                    player.level() == prevPos.world
                 ) {
                     // ... remove them from the bar
                     removeUuids.add(uuid)
@@ -105,7 +106,7 @@ object BarUpdater {
 
                 // If we left the dimension the other player was in
                 if (
-                    previousPlayer?.world != player.entityWorld &&
+                    previousPlayer?.world != player.level() &&
                     previousPlayer?.world == curPos?.world
                 ) {
                     // ... remove them from the bar
@@ -116,12 +117,12 @@ object BarUpdater {
                 if (
                     curPos != null &&
                     previousPlayer != null &&
-                    curPos.world == player.entityWorld &&
+                    curPos.world == player.level() &&
                     curPos.world == prevPos.world &&
                     maxDistance != 0
                 ) {
                     val previousDistance = previousPlayer.pos.distanceTo(prevPos.pos)
-                    val currentDistance = player.entityPos.distanceTo(curPos.pos)
+                    val currentDistance = player.position().distanceTo(curPos.pos)
 
                     if (currentDistance > maxDistance && previousDistance <= maxDistance) {
                         // ... remove them from the bar
@@ -137,7 +138,7 @@ object BarUpdater {
                 if (uuid == player.uuid) continue
 
                 // don't update if different dimensions
-                if (curPos.world != player.entityWorld) continue
+                if (curPos.world != player.level()) continue
 
                 val previousRelativeLocation = previousPositions[uuid]?.let { prevPos ->
                     previousPlayer?.let { prevPlayer ->
@@ -150,40 +151,47 @@ object BarUpdater {
                 if (previousRelativeLocation == currentRelativeLocation) continue
 
                 // don't update position if we're too far
-                val currentDistance = player.entityPos.distanceTo(curPos.pos)
+                val currentDistance = player.position().distanceTo(curPos.pos)
                 if (maxDistance != 0 && currentDistance > maxDistance) continue
 
                 updatedPositions.add(currentRelativeLocation)
             }
 
-            val fullReset = previousPlayer?.world != player.entityWorld
+            val fullReset = previousPlayer?.world != player.level()
 
             if (updatedPositions.isEmpty() && removeUuids.isEmpty()) continue
 
-            ServerPlayNetworking.send(player, PlayerLocationsS2CPayload(
-                locationUpdates = updatedPositions,
-                removeUuids = removeUuids.toList(),
-                fullReset = fullReset,
-            ))
+            ServerPlayNetworking.send(
+                player, PlayerLocationsS2CPayload(
+                    locationUpdates = updatedPositions,
+                    removeUuids = removeUuids.toList(),
+                    fullReset = fullReset,
+                )
+            )
         }
 
         previousPositions = currentPositions
     }
 
     private fun getPositions(server: MinecraftServer): Map<UUID, StoredPlayerPosition> {
-        return server.playerManager.playerList
+        return server.playerList.players
             .filterNot {
-                (config.sneakingHides && it.isSneaking) ||
-                (config.pumpkinHides && !LivingEntity.NOT_WEARING_GAZE_DISGUISE_PREDICATE.test(it)) ||
-                (config.mobHeadsHide && it.getEquippedStack(EquipmentSlot.HEAD).isIn(PlayerLocatorPlus.HIDING_EQUIPMENT_TAG)) ||
-                (config.invisibilityHides && it.hasStatusEffect(StatusEffects.INVISIBILITY)) ||
-                it.isSpectator
+                (config.sneakingHides && it.isCrouching) ||
+                        (config.pumpkinHides && !LivingEntity.PLAYER_NOT_WEARING_DISGUISE_ITEM.test(it)) ||
+                        (config.mobHeadsHide && it.getItemBySlot(EquipmentSlot.HEAD)
+                            .`is`(PlayerLocatorPlus.HIDING_EQUIPMENT_TAG)) ||
+                        (config.invisibilityHides && it.hasEffect(MobEffects.INVISIBILITY)) ||
+                        it.isSpectator
             }
             .associate { it.uuid to StoredPlayerPosition(it) }
     }
 
-    private fun calculateRelativeLocation(uuid: UUID, selfPos: StoredPlayerPosition, otherPos: StoredPlayerPosition): RelativePlayerLocation {
-        val direction = selfPos.pos.relativize(otherPos.pos).normalize().toVector3f()
+    private fun calculateRelativeLocation(
+        uuid: UUID,
+        selfPos: StoredPlayerPosition,
+        otherPos: StoredPlayerPosition
+    ): RelativePlayerLocation {
+        val direction = selfPos.pos.cross(otherPos.pos).normalize().toVector3f()
         direction.x = round(direction.x * config.directionPrecision) / config.directionPrecision
         direction.y = round(direction.y * config.directionPrecision) / config.directionPrecision
         direction.z = round(direction.z * config.directionPrecision) / config.directionPrecision
@@ -202,7 +210,7 @@ object BarUpdater {
         )
     }
 
-    fun sendFakePlayers(player: ServerPlayerEntity) {
+    fun sendFakePlayers(player: ServerPlayer) {
         val positions = (0..5)
             .map {
                 RelativePlayerLocation(

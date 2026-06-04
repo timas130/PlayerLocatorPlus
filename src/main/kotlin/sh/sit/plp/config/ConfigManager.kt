@@ -5,8 +5,8 @@ import me.shedaniel.autoconfig.ConfigHolder
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.server.PlayerManager
-import net.minecraft.util.ActionResult
+import net.minecraft.server.players.PlayerList
+import net.minecraft.world.InteractionResult
 import sh.sit.plp.PlayerLocatorPlus
 import sh.sit.plp.network.ModConfigS2CPayload
 
@@ -24,25 +24,26 @@ object ConfigManager {
 
     private lateinit var configHolder: ConfigHolder<ModConfig>
 
-    private var playerManager: PlayerManager? = null
+    private var playerList: PlayerList? = null
 
     fun init() {
         AutoConfig.register(ModConfig::class.java, ::KTomlConfigSerializer)
         configHolder = AutoConfig.getConfigHolder(ModConfig::class.java)
-        config = configHolder.config
         configHolder.registerSaveListener { _, modConfig ->
             config = modConfig
             reload()
-            ActionResult.PASS
+            InteractionResult.PASS
         }
         configHolder.registerLoadListener { _, modConfig ->
             config = modConfig
             reload()
-            ActionResult.PASS
+            InteractionResult.PASS
         }
+        config = configHolder.config
+
 
         ServerTickEvents.END_SERVER_TICK.register(ServerTickEvents.EndTick { server ->
-            playerManager = server.playerManager
+            playerList = server.playerList
         })
 
         ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, _, _ ->
@@ -64,7 +65,7 @@ object ConfigManager {
             PlayerLocatorPlus.logger.info("server config reloaded")
             return
         }
-        for (player in playerManager?.playerList ?: emptyList()) {
+        for (player in playerList?.players ?: emptyList()) {
             ServerPlayNetworking.send(player, ModConfigS2CPayload(config))
         }
 

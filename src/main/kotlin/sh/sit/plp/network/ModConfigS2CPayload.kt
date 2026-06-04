@@ -1,26 +1,26 @@
 package sh.sit.plp.network
 
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.network.packet.CustomPayload
-import net.minecraft.util.Identifier
-import sh.sit.plp.config.ModConfig
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
+import net.minecraft.resources.Identifier
 import sh.sit.plp.PlayerLocatorPlus
+import sh.sit.plp.config.ModConfig
 
 @JvmRecord
 data class ModConfigS2CPayload(
     val config: ModConfig,
-) : CustomPayload {
+) : CustomPacketPayload {
     companion object {
-        private val MOD_CONFIG_PAYLOAD_ID = Identifier.of(PlayerLocatorPlus.MOD_ID, "mod_config")
+        private val MOD_CONFIG_PAYLOAD_ID = Identifier.fromNamespaceAndPath(PlayerLocatorPlus.MOD_ID, "mod_config")
 
-        val ID = CustomPayload.Id<ModConfigS2CPayload>(MOD_CONFIG_PAYLOAD_ID)
-        val CODEC: PacketCodec<PacketByteBuf, ModConfigS2CPayload> = PacketCodec.tuple(
+        val ID = CustomPacketPayload.Type<ModConfigS2CPayload>(MOD_CONFIG_PAYLOAD_ID)
+        val CODEC: StreamCodec<FriendlyByteBuf, ModConfigS2CPayload> = StreamCodec.composite(
             ModConfig.PACKET_CODEC,
             ModConfigS2CPayload::config,
             ::ModConfigS2CPayload
         )
     }
 
-    override fun getId(): CustomPayload.Id<out CustomPayload> = ID
+    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload> = ID
 }

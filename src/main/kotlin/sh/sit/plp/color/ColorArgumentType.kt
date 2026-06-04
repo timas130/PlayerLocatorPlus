@@ -6,18 +6,19 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.SuggestionProvider
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import net.minecraft.command.CommandSource
-import net.minecraft.command.argument.serialize.ConstantArgumentSerializer
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
+import net.minecraft.commands.SharedSuggestionProvider
+import net.minecraft.commands.arguments.ColorArgument
+import net.minecraft.commands.synchronization.SingletonArgumentInfo
 import java.util.concurrent.CompletableFuture
 
 class ColorArgumentType : ArgumentType<Int> {
     companion object {
         @JvmField
-        val SERIALIZER = ConstantArgumentSerializer.of(::ColorArgumentType)!!
+        val SERIALIZER = SingletonArgumentInfo.contextFree(::ColorArgumentType)
 
         @JvmField
-        val suggestionProvider = SuggestionProvider<CommandSource> { commandContext, suggestionsBuilder ->
+        val suggestionProvider = SuggestionProvider<SharedSuggestionProvider> { commandContext, suggestionsBuilder ->
             ColorArgumentType().listSuggestions(commandContext, suggestionsBuilder)
         }
     }
@@ -29,20 +30,18 @@ class ColorArgumentType : ArgumentType<Int> {
         } else {
             reader.readUnquotedString()
         }
-        val formatting = Formatting.byName(string)
+        val formatting = ChatFormatting.getByName(string)
 
         return if (formatting != null && formatting.isColor) {
-            formatting.colorValue!!
+            formatting.color!!
         } else if (string.startsWith('#') && string.length == 7) {
             try {
                 string.substring(1).toInt(16)
             } catch (_: NumberFormatException) {
-                throw net.minecraft.command.argument.ColorArgumentType
-                    .INVALID_COLOR_EXCEPTION.createWithContext(reader, string)
+                throw ColorArgument.ERROR_INVALID_VALUE.createWithContext(reader, string)
             }
         } else {
-            throw net.minecraft.command.argument.ColorArgumentType
-                .INVALID_COLOR_EXCEPTION.createWithContext(reader, string)
+            throw ColorArgument.ERROR_INVALID_VALUE.createWithContext(reader, string)
         }
     }
 
@@ -59,7 +58,7 @@ class ColorArgumentType : ArgumentType<Int> {
             }
         }
 
-        val colorNames = Formatting.getNames(true, false)
-        return CommandSource.suggestMatching(colorNames, builder)
+        val colorNames = ChatFormatting.getNames(true, false)
+        return SharedSuggestionProvider.suggest(colorNames, builder)
     }
 }

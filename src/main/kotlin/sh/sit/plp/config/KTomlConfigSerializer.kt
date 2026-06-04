@@ -47,7 +47,7 @@ class KTomlConfigSerializer(
                 return config
             } catch (e: IOException) {
                 throw SerializationException(e)
-            } catch (e: kotlinx.serialization.SerializationException) {
+            } catch (e: SerializationException) {
                 throw SerializationException(e)
             }
         } else {

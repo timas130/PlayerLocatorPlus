@@ -14,10 +14,13 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 @Mixin(value = {ComposedGuiRegistryAccess.class, DefaultGuiRegistryAccess.class, GuiRegistry.class}, remap = false)
-public class AutoconfigGuiRegistryAccessMixin {
+public class AutoconfigGuiRegistryAccessMixin
+{
     @Inject(method = "get", at = @At("RETURN"), cancellable = true)
-    private void get(String i18n, Field field, Object config, Object defaults, GuiRegistryAccess registry, CallbackInfoReturnable<List<AbstractConfigListEntry>> cir) {
-        if (field.getName().equals("$childSerializers")) {
+    private void get(String i18n, Field field, Object config, Object defaults, GuiRegistryAccess registry, CallbackInfoReturnable<List<AbstractConfigListEntry>> cir)
+    {
+        if (field.getName().equals("$childSerializers"))
+        {
             cir.setReturnValue(List.of());
         }
     }

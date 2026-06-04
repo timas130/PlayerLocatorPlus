@@ -1,7 +1,7 @@
 package sh.sit.plp.network
 
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
 import org.joml.Vector3f
 import java.util.*
 
@@ -16,19 +16,19 @@ data class RelativePlayerLocation(
     val color: Int,
 ) {
     companion object {
-        val CODEC: PacketCodec<PacketByteBuf, RelativePlayerLocation> =
-            PacketCodec.of(RelativePlayerLocation::write, ::RelativePlayerLocation)
+        val CODEC: StreamCodec<FriendlyByteBuf, RelativePlayerLocation> =
+            StreamCodec.ofMember(RelativePlayerLocation::write, ::RelativePlayerLocation)
     }
 
-    constructor(buf: PacketByteBuf) : this(
-        playerUuid = buf.readUuid(),
+    constructor(buf: FriendlyByteBuf) : this(
+        playerUuid = buf.readUUID(),
         direction = buf.readVector3f(),
         distance = buf.readFloat(),
         color = buf.readInt(),
     )
 
-    fun write(buf: PacketByteBuf) {
-        buf.writeUuid(playerUuid)
+    fun write(buf: FriendlyByteBuf) {
+        buf.writeUUID(playerUuid)
         buf.writeVector3f(direction)
         buf.writeFloat(distance)
         buf.writeInt(color)

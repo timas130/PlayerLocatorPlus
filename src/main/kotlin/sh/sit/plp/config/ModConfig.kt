@@ -1,33 +1,37 @@
 package sh.sit.plp.config
 
-import com.akuleshov7.ktoml.annotations.TomlInteger
-import com.akuleshov7.ktoml.writers.IntegerRepresentation
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import me.shedaniel.autoconfig.ConfigData
 import me.shedaniel.autoconfig.annotation.Config
 import me.shedaniel.autoconfig.annotation.ConfigEntry
 import me.shedaniel.clothconfig2.gui.entries.SelectionListEntry.Translatable
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
 import sh.sit.plp.PlayerLocatorPlus
 
 @Config(name = PlayerLocatorPlus.MOD_ID)
 @Serializable
 class ModConfig : ConfigData {
     var enabled = true
+
     @ConfigEntry.Gui.Tooltip
     var sendServerConfig = true
+
     @ConfigEntry.Gui.Tooltip
     var sendDistance = true
+
     @ConfigEntry.Gui.Tooltip
     var maxDistance = 0
+
     @ConfigEntry.Gui.Tooltip
     var directionPrecision = 300f
+
     @ConfigEntry.Gui.Tooltip
     var ticksBetweenUpdates = 5
     var sneakingHides = true
     var pumpkinHides = true
+
     @ConfigEntry.Gui.Tooltip
     var mobHeadsHide = true
     var invisibilityHides = true
@@ -35,29 +39,40 @@ class ModConfig : ConfigData {
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var visible = true
+
     @ConfigEntry.Category("style")
     var visibleEmpty = false
+
     @ConfigEntry.Category("style")
     var alwaysVisibleInSpectator = false
+
     @ConfigEntry.Category("style")
     var acceptServerConfig = true
+
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var fadeMarkers = true
+
     @ConfigEntry.Category("style")
     var fadeStart = 100
+
     @ConfigEntry.Category("style")
     var fadeEnd = 1000
+
     @ConfigEntry.Category("style")
     var fadeEndOpacity = 0.3f
+
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var showHeight = true
+
     @ConfigEntry.Category("style")
     var alwaysShowHeads = false
+
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var showHeadsOnTab = true
+
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var showNamesOnTab = true
@@ -65,14 +80,16 @@ class ModConfig : ConfigData {
     @ConfigEntry.Category("color")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     var colorMode = ColorMode.UUID
+
     @ConfigEntry.Category("color")
     @ConfigEntry.ColorPicker
     @ConfigEntry.Gui.Tooltip
-    @TomlInteger(IntegerRepresentation.HEX)
+//    @TomlInteger(IntegerRepresentation.HEX)
     var constantColor = 0xFFFFFF
 
     @ConfigEntry.Category("vanilla")
     var showVanillaWaypoints = true
+
     @ConfigEntry.Category("vanilla")
     @ConfigEntry.Gui.Tooltip
     var allowVanillaLocatorBar = true
@@ -116,18 +133,19 @@ class ModConfig : ConfigData {
     }
 
     companion object {
-        val PACKET_CODEC = object : PacketCodec<PacketByteBuf, ModConfig> {
+        val PACKET_CODEC = object : StreamCodec<FriendlyByteBuf, ModConfig> {
             val json = Json {
                 encodeDefaults = true
                 ignoreUnknownKeys = true
             }
 
-            override fun encode(buf: PacketByteBuf, value: ModConfig) {
-                buf.writeString(json.encodeToString(value), 16 * 1024)
+            override fun encode(buf: FriendlyByteBuf, value: ModConfig) {
+                val data = json.encodeToString(value)
+                buf.writeUtf(data, 16 * 1024)
             }
 
-            override fun decode(buf: PacketByteBuf): ModConfig {
-                val data = buf.readString(16 * 1024)
+            override fun decode(buf: FriendlyByteBuf): ModConfig {
+                val data = buf.readUtf(16 * 1024)
                 return json.decodeFromString(data)
             }
         }

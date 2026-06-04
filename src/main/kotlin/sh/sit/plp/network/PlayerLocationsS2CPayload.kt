@@ -1,11 +1,11 @@
 package sh.sit.plp.network
 
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.network.codec.PacketCodecs
-import net.minecraft.network.packet.CustomPayload
-import net.minecraft.util.Identifier
-import net.minecraft.util.Uuids
+import net.minecraft.core.UUIDUtil
+import net.minecraft.network.RegistryFriendlyByteBuf
+import net.minecraft.network.codec.ByteBufCodecs
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
+import net.minecraft.resources.Identifier
 import sh.sit.plp.PlayerLocatorPlus
 import java.util.*
 
@@ -14,27 +14,30 @@ data class PlayerLocationsS2CPayload(
     val locationUpdates: List<RelativePlayerLocation>,
     val removeUuids: List<UUID>,
     val fullReset: Boolean,
-) : CustomPayload {
+) : CustomPacketPayload {
     companion object {
-        private val PLAYER_LOCATIONS_PAYLOAD_ID = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locations_v2")
+        private val PLAYER_LOCATIONS_PAYLOAD_ID =
+            Identifier.fromNamespaceAndPath(PlayerLocatorPlus.MOD_ID, "player_locations_v2")
 
-        val ID = CustomPayload.Id<PlayerLocationsS2CPayload>(PLAYER_LOCATIONS_PAYLOAD_ID)
-        val CODEC: PacketCodec<PacketByteBuf, PlayerLocationsS2CPayload> = PacketCodec.tuple(
-            PacketCodecs.collection(
+        val ID = CustomPacketPayload.Type<PlayerLocationsS2CPayload>(PLAYER_LOCATIONS_PAYLOAD_ID)
+        val CODEC: StreamCodec<RegistryFriendlyByteBuf, PlayerLocationsS2CPayload> = StreamCodec.composite(
+            ByteBufCodecs.collection(
                 /* factory = */ { capacity -> ArrayList(capacity) },
                 /* elementCodec = */ RelativePlayerLocation.CODEC
             ),
             PlayerLocationsS2CPayload::locationUpdates,
-            PacketCodecs.collection(
+            ByteBufCodecs.collection(
                 { capacity -> ArrayList(capacity) },
-                Uuids.PACKET_CODEC
+                UUIDUtil.STREAM_CODEC
             ),
             PlayerLocationsS2CPayload::removeUuids,
-            PacketCodecs.BOOLEAN,
+            ByteBufCodecs.BOOL,
             PlayerLocationsS2CPayload::fullReset,
             ::PlayerLocationsS2CPayload
         )
     }
 
-    override fun getId(): CustomPayload.Id<out CustomPayload> = ID
+    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload> = ID;
+
+
 }

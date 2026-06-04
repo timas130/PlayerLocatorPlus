@@ -1,20 +1,23 @@
 package sh.sit.plp.color
 
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.resources.Identifier
 import net.minecraft.server.MinecraftServer
-import net.minecraft.world.PersistentState
-import net.minecraft.world.PersistentStateType
+import net.minecraft.util.datafix.DataFixTypes
+import net.minecraft.world.level.saveddata.SavedData
+import net.minecraft.world.level.saveddata.SavedDataType
 import sh.sit.plp.PlayerLocatorPlus
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
-class PlayerDataState : PersistentState() {
+class PlayerDataState : SavedData() {
     companion object {
-        private val CODEC = NbtCompound.CODEC
+
+        private val CODEC = CompoundTag.CODEC
             .fieldOf("players")
             .xmap({ playersNbt ->
                 val ret = hashMapOf<UUID, PlayerData>()
-                playersNbt.keys.forEach { k ->
+                playersNbt.keySet().forEach { k ->
                     val playerNbt = playersNbt.getCompound(k).getOrNull()
                     val playerData = PlayerData(
                         customColor = playerNbt?.getInt("customColor")?.orElse(0xFFFFFF) ?: 0xFFFFFF,
@@ -25,9 +28,9 @@ class PlayerDataState : PersistentState() {
                     it.players = ret
                 }
             }, { state ->
-                NbtCompound().also { ret ->
+                CompoundTag().also { ret ->
                     state.players.forEach { (k, v) ->
-                        val playerNbt = NbtCompound()
+                        val playerNbt = CompoundTag()
                         playerNbt.putInt("customColor", v.customColor)
                         ret.put(k.toString(), playerNbt)
                     }
@@ -35,15 +38,18 @@ class PlayerDataState : PersistentState() {
             })
             .codec()
 
-        private val TYPE = PersistentStateType(
-            "${PlayerLocatorPlus.MOD_ID}-player_data",
+        private val TYPE = SavedDataType(
+            Identifier.fromNamespaceAndPath(PlayerLocatorPlus.MOD_ID, "saved_block_data"),
             ::PlayerDataState,
             CODEC,
-            null,
-        )
+            DataFixTypes.PLAYER
+        );
 
-        fun of(server: MinecraftServer): PlayerDataState {
-            return server.overworld.persistentStateManager.getOrCreate(TYPE)
+        //        fun of(server: MinecraftServer): PlayerDataState {
+//            return server.worldData.overworldData().(TYPE)
+//        }
+        fun of(server: MinecraftServer): PlayerDataState? {
+            return server.dataStorage.computeIfAbsent(TYPE);
         }
     }
 
@@ -51,7 +57,7 @@ class PlayerDataState : PersistentState() {
 
     fun getPlayer(uuid: UUID): PlayerData {
         return players.getOrPut(uuid) {
-            markDirty()
+            setDirty()
             PlayerData()
         }
     }
