@@ -5,7 +5,6 @@ import com.mojang.brigadier.Command
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
-import net.minecraft.command.CommandSource
 import net.minecraft.command.argument.GameProfileArgumentType
 import net.minecraft.server.PlayerConfigEntry
 import net.minecraft.server.command.CommandManager
@@ -38,7 +37,6 @@ object PLPCommand {
                     })
                 .then(CommandManager.literal("color")
                     .then(CommandManager.argument("color", ColorArgumentType())
-                        .requires { it.isExecutedByPlayer }
                         .suggests { _, builder ->
                             // Fix for a weird bug on Forge (+Sinytra Connector).
                             // It only includes the custom id in CommandTreeS2CPacket if customSuggestions != null,
@@ -51,12 +49,6 @@ object PLPCommand {
                         }
                         .then(CommandManager.argument("player", GameProfileArgumentType.gameProfile())
                             .requires { it.hasPermissionLevel(2) }
-                            .suggests { context, builder ->
-                                CommandSource.suggestMatching(
-                                    context.source.server.playerManager.playerList.map { it.gameProfile.name },
-                                    builder
-                                )
-                            }
                             .executes { c ->
                                 runChangeColor(c, false)
                             }))))
