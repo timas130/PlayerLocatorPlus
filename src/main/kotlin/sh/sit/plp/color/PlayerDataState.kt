@@ -17,7 +17,7 @@ class PlayerDataState : PersistentState() {
                 playersNbt.keys.forEach { k ->
                     val playerNbt = playersNbt.getCompound(k).getOrNull()
                     val playerData = PlayerData(
-                        customColor = playerNbt?.getInt("customColor")?.orElse(0xFFFFFF) ?: 0xFFFFFF,
+                        customColor = playerNbt?.getInt("customColor")?.getOrNull(),
                     )
                     ret[UUID.fromString(k)] = playerData
                 }
@@ -28,7 +28,9 @@ class PlayerDataState : PersistentState() {
                 NbtCompound().also { ret ->
                     state.players.forEach { (k, v) ->
                         val playerNbt = NbtCompound()
-                        playerNbt.putInt("customColor", v.customColor)
+                        v.customColor?.let {
+                            playerNbt.putInt("customColor", it)
+                        }
                         ret.put(k.toString(), playerNbt)
                     }
                 }
