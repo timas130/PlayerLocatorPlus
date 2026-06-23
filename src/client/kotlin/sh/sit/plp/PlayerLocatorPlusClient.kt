@@ -38,6 +38,16 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     private val PLAYER_MARK_DOWN_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_down")
     private val PLAYER_MARK_WHITE_OUTLINE_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_white_outline")
 
+    private val PLAYER_MARK_TEXTURES = arrayOf(
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_0"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_1"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_2"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_3"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_4"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_5"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_6"),
+    )
+
     private const val NAME_PLAQUE_PADDING_X = 4
     private const val NAME_PLAQUE_PADDING_Y = 2
     private const val NAME_PLAQUE_MARGIN = 2
@@ -213,9 +223,19 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             }
 
             if (playerListEntry == null || !showHeadIcon) {
+                val texture = if (config.shrinkMarkers) {
+                    val dist = position.distance.coerceIn(config.shrinkStart.toFloat(), config.shrinkEnd.toFloat())
+                    val shrinkProgress = (dist - config.shrinkStart) / (config.shrinkEnd - config.shrinkStart)
+                    val textureIdx = (shrinkProgress * PLAYER_MARK_TEXTURES.size).toInt()
+                        .coerceAtMost(PLAYER_MARK_TEXTURES.size - 1)
+                    PLAYER_MARK_TEXTURES[textureIdx]
+                } else {
+                    PLAYER_MARK_TEXTURE
+                }
+
                 context.drawGuiTexture(
                     /* pipeline = */ RenderPipelines.GUI_TEXTURED,
-                    /* sprite = */ PLAYER_MARK_TEXTURE,
+                    /* sprite = */ texture,
                     /* x = */ markX,
                     /* y = */ y - 1,
                     /* width = */ 7,
