@@ -16,7 +16,7 @@ import sh.sit.plp.network.PlayerLocationsS2CPayload
 
 object PlayerLocatorPlus : ModInitializer {
     const val MOD_ID = "player-locator-plus"
-    val logger = LoggerFactory.getLogger("player-locator-plus")
+    val logger = LoggerFactory.getLogger("player-locator-plus")!!
 
     val HIDING_EQUIPMENT_TAG = TagKey.of(RegistryKeys.ITEM, Identifier.of("player-locator-plus", "hiding_equipment"))!!
 
