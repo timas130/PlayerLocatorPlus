@@ -38,16 +38,25 @@ class ModConfig : ConfigData {
     @ConfigEntry.Category("style")
     var visibleEmpty = false
     @ConfigEntry.Category("style")
+    var alwaysVisibleInSpectator = false
+    @ConfigEntry.Category("style")
     var acceptServerConfig = true
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
-    var fadeMarkers = true
+    var fadeMarkers = false
     @ConfigEntry.Category("style")
     var fadeStart = 100
     @ConfigEntry.Category("style")
     var fadeEnd = 1000
     @ConfigEntry.Category("style")
     var fadeEndOpacity = 0.3f
+    @ConfigEntry.Category("style")
+    @ConfigEntry.Gui.Tooltip
+    var shrinkMarkers = true
+    @ConfigEntry.Category("style")
+    var shrinkStart = 70
+    @ConfigEntry.Category("style")
+    var shrinkEnd = 500
     @ConfigEntry.Category("style")
     @ConfigEntry.Gui.Tooltip
     var showHeight = true
@@ -68,6 +77,12 @@ class ModConfig : ConfigData {
     @ConfigEntry.Gui.Tooltip
     @TomlInteger(IntegerRepresentation.HEX)
     var constantColor = 0xFFFFFF
+
+    @ConfigEntry.Category("vanilla")
+    var showVanillaWaypoints = true
+    @ConfigEntry.Category("vanilla")
+    @ConfigEntry.Gui.Tooltip
+    var allowVanillaLocatorBar = true
 
     enum class ColorMode(private val key: String) : Translatable {
         UUID("uuid"),
@@ -92,6 +107,10 @@ class ModConfig : ConfigData {
         if (fadeEndOpacity !in 0.0..1.0) {
             PlayerLocatorPlus.logger.warn("invalid config: fadeEndOpacity not in [0, 1]")
             fadeEndOpacity = 0.3f
+        }
+        if (shrinkEnd < 1 || shrinkEnd <= shrinkStart) {
+            PlayerLocatorPlus.logger.warn("invalid config: shrinkEnd < 1 or shrinkEnd <= shrinkStart")
+            shrinkEnd = shrinkStart + 1
         }
         if (ticksBetweenUpdates < 0) {
             PlayerLocatorPlus.logger.warn("invalid config: ticksBetweenUpdates < 0")

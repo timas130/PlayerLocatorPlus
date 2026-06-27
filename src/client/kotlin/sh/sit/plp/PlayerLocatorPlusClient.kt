@@ -1,6 +1,7 @@
 package sh.sit.plp
 
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
@@ -8,6 +9,7 @@ import net.minecraft.client.gui.PlayerSkinDrawer
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.render.entity.LivingEntityRenderer
+import net.minecraft.entity.LivingEntity
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.profiler.Profilers
@@ -26,13 +28,21 @@ import kotlin.math.round
 import kotlin.math.roundToInt
 
 object PlayerLocatorPlusClient : ClientModInitializer {
-    private val PLAYER_LOCATOR_LAYER = Identifier.of(PlayerLocatorPlus.MOD_ID, "player_locator")
-
     private val EXPERIENCE_BAR_BACKGROUND_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/empty_bar")
     private val PLAYER_MARK_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark")
     private val PLAYER_MARK_UP_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_up")
     private val PLAYER_MARK_DOWN_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_down")
     private val PLAYER_MARK_WHITE_OUTLINE_TEXTURE = Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_white_outline")
+
+    private val PLAYER_MARK_TEXTURES = arrayOf(
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_0"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_1"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_2"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_3"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_4"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_5"),
+        Identifier.of(PlayerLocatorPlus.MOD_ID, "hud/player_mark_6"),
+    )
 
     private const val NAME_PLAQUE_PADDING_X = 4
     private const val NAME_PLAQUE_PADDING_Y = 2
@@ -77,9 +87,17 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             lastUpdatePosition = MinecraftClient.getInstance().player?.pos ?: Vec3d.ZERO
             relativePositionsLock.unlock()
         }
+
+        ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
+            relativePositionsLock.lock()
+            relativePositions.clear()
+            relativePositionsLock.unlock()
+        }
     }
 
-    private fun isBarVisible(client: MinecraftClient): Boolean {
+    fun isBarVisible(): Boolean {
+        val client = MinecraftClient.getInstance()
+
         val player = client.player ?: return false
         val interactionManager = client.interactionManager ?: return false
         val inGameHud = client.inGameHud
@@ -102,7 +120,11 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             return false
         }
         // hide in spectator mode when the spectator menu is not open
-        if (interactionManager.currentGameMode == GameMode.SPECTATOR && !inGameHud.spectatorHud.isOpen) {
+        if (
+            interactionManager.currentGameMode == GameMode.SPECTATOR &&
+            !inGameHud.spectatorHud.isOpen &&
+            !config.alwaysVisibleInSpectator
+        ) {
             return false
         }
 
@@ -112,9 +134,9 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     fun render(context: DrawContext, tickCounter: RenderTickCounter) {
         if (!config.visible) return
 
-        val client = MinecraftClient.getInstance()
-        if (!isBarVisible(client)) return
+        if (!isBarVisible()) return
 
+        val client = MinecraftClient.getInstance()
         Profilers.get().push("plp")
         val player = client.player ?: return
         val interactionManager = client.interactionManager ?: return
@@ -134,7 +156,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
         val isTabPressed = client.options.playerListKey.isPressed
 
-        for ((_, position) in relativePositions) {
+        for (position in relativePositions.values.asSequence()) {
             val playerMarker = player.world.getPlayerByUuid(position.playerUuid)
             val actualPosition = playerMarker
                 ?.getLerpedPos(tickCounter.getTickDelta(false))
@@ -152,7 +174,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             if (!direction2d.isFinite) {
                 continue
             }
-            val rotationVec = player.getRotationVec(1f)
+            val rotationVec = player.getRotationVec(tickCounter.getTickDelta(false))
             var relativeAngle = -direction2d.angle(Vector2d(rotationVec.x, rotationVec.z)) * 180.0 / Math.PI
             if (relativeAngle.isNaN()) {
                 relativeAngle = 0.0
@@ -182,7 +204,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             } else {
                 255
             }
-            val color = (opacity shl 24) or position.color
+            val color = (opacity shl 24) or (position.color and 0xFFFFFF)
 
             // store marker information for name plaque rendering later
             if (playerListEntry != null && config.showNamesOnTab) {
@@ -196,9 +218,19 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             }
 
             if (playerListEntry == null || !showHeadIcon) {
+                val texture = if (config.shrinkMarkers) {
+                    val dist = position.distance.coerceIn(config.shrinkStart.toFloat(), config.shrinkEnd.toFloat())
+                    val shrinkProgress = (dist - config.shrinkStart) / (config.shrinkEnd - config.shrinkStart)
+                    val textureIdx = (shrinkProgress * PLAYER_MARK_TEXTURES.size).toInt()
+                        .coerceAtMost(PLAYER_MARK_TEXTURES.size - 1)
+                    PLAYER_MARK_TEXTURES[textureIdx]
+                } else {
+                    PLAYER_MARK_TEXTURE
+                }
+
                 context.drawGuiTexture(
                     /* renderLayers = */ RenderLayer::getGuiTextured,
-                    /* sprite = */ PLAYER_MARK_TEXTURE,
+                    /* sprite = */ texture,
                     /* x = */ markX,
                     /* y = */ y - 1,
                     /* width = */ 7,
@@ -223,7 +255,9 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                     /* y = */ y,
                     /* size = */ 5,
                     /* hatVisible = */ false,
-                    /* upsideDown = */ playerMarker?.let { LivingEntityRenderer.shouldFlipUpsideDown(it) } ?: false,
+                    /* upsideDown = */ (playerMarker as? LivingEntity)
+                        ?.let { LivingEntityRenderer.shouldFlipUpsideDown(it) }
+                        ?: false,
                     /* color = */ -1
                 )
             }
