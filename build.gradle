@@ -36,14 +36,14 @@ loom {
 }
 
 configurations {
-    includeAndExpose
+	includeAndExpose
 
-    modApi {
-        extendsFrom includeAndExpose
-    }
-    include {
-        extendsFrom includeAndExpose
-    }
+	modApi {
+		extendsFrom includeAndExpose
+	}
+	include {
+		extendsFrom includeAndExpose
+	}
 }
 
 dependencies {
