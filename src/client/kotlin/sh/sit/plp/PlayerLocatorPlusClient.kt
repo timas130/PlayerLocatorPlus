@@ -157,7 +157,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         val isTabPressed = client.options.playerListKey.isPressed
 
         for (position in relativePositions.values.asSequence()) {
-            val playerMarker = player.world.getEntity(position.playerUuid)
+            val playerMarker = player.world.getPlayerByUuid(position.playerUuid)
             val actualPosition = playerMarker
                 ?.getLerpedPos(tickCounter.getTickDelta(false))
             val direction = if (actualPosition != null) {
@@ -174,7 +174,7 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             if (!direction2d.isFinite) {
                 continue
             }
-            val rotationVec = player.getRotationVec(tickCounter.getTickProgress(false))
+            val rotationVec = player.getRotationVec(tickCounter.getTickDelta(false))
             var relativeAngle = -direction2d.angle(Vector2d(rotationVec.x, rotationVec.z)) * 180.0 / Math.PI
             if (relativeAngle.isNaN()) {
                 relativeAngle = 0.0
