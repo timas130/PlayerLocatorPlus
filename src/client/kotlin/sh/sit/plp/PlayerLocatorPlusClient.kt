@@ -59,9 +59,16 @@ object PlayerLocatorPlusClient : ClientModInitializer {
     // for mixin
     val currentHudOffset get() = hudOffset.currentValue
 
+    private data class MarkerPosition(
+        val location: RelativePlayerLocation,
+        // Local player position when this marker update was received. Used to compensate
+        // for local movement until the next update. Null means the direction is already live.
+        // (Vanilla waypoints are recalculated against the current camera every frame.)
+        val projectionOrigin: Vec3?,
+    )
+
     private val relativePositionsLock = ReentrantLock()
-    private var lastUpdatePosition = Vec3.ZERO
-    private val relativePositions = mutableMapOf<UUID, RelativePlayerLocation>()
+    private val relativePositions = mutableMapOf<UUID, MarkerPosition>()
 
     private data class NamePlaque(
         val x: Int,
@@ -73,6 +80,8 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         ConfigManagerClient.init()
 
         ClientPlayNetworking.registerGlobalReceiver(PlayerLocationsS2CPayload.ID) { payload, _ ->
+            val projectionOrigin = Minecraft.getInstance().player?.position() ?: Vec3.ZERO
+
             relativePositionsLock.lock()
             if (payload.fullReset) {
                 relativePositions.clear()
@@ -83,12 +92,9 @@ object PlayerLocatorPlusClient : ClientModInitializer {
             }
 
             for (update in payload.locationUpdates) {
-                relativePositions.compute(update.playerUuid) { _, _ ->
-                    update
-                }
+                relativePositions[update.playerUuid] = MarkerPosition(update, projectionOrigin)
             }
 
-            lastUpdatePosition = Minecraft.getInstance().player?.position() ?: Vec3.ZERO
             relativePositionsLock.unlock()
         }
 
@@ -161,16 +167,18 @@ object PlayerLocatorPlusClient : ClientModInitializer {
 
         val isTabPressed = client.options.keyPlayerList.isDown
 
-        for (position in (relativePositions.values.asSequence() + getVanillaWaypoints(client))) {
+        for (marker in (relativePositions.values.asSequence() + getVanillaWaypoints(client))) {
+            val position = marker.location
+            val projectionOrigin = marker.projectionOrigin
             val playerMarker = player.level().getEntity(position.playerUuid)
             val actualPosition = playerMarker
                 ?.getPosition(tickCounter.getGameTimeDeltaPartialTick(false))
             val direction = if (actualPosition != null) {
                 actualPosition.subtract(player.getPosition(tickCounter.getGameTimeDeltaPartialTick(false)))
-            } else if (position.distance == 0f) {
+            } else if (projectionOrigin == null || position.distance == 0f) {
                 Vec3(position.direction)
             } else {
-                val projectedPosition = lastUpdatePosition
+                val projectedPosition = projectionOrigin
                     .add(Vec3(position.direction).scale(position.distance.toDouble()))
                 projectedPosition.subtract(player.getPosition(tickCounter.getGameTimeDeltaPartialTick(false)))
             }
@@ -375,10 +383,10 @@ object PlayerLocatorPlusClient : ClientModInitializer {
         }
     }
 
-    private fun getVanillaWaypoints(client: Minecraft): List<RelativePlayerLocation> {
+    private fun getVanillaWaypoints(client: Minecraft): List<MarkerPosition> {
         if (!config.showVanillaWaypoints) return emptyList()
 
-        val ret = mutableListOf<RelativePlayerLocation>()
+        val ret = mutableListOf<MarkerPosition>()
         client.connection?.waypointManager?.forEachWaypoint(client.cameraEntity!!) { waypoint ->
             val uuid = Either.unwrap(waypoint.id().mapRight {
                 UUID.nameUUIDFromBytes("plp-waypoint:$it".toByteArray())
@@ -407,11 +415,14 @@ object PlayerLocatorPlusClient : ClientModInitializer {
                 distance = 110224.0
             }
 
-            ret.add(RelativePlayerLocation(
-                playerUuid = uuid,
-                direction = directionVector,
-                distance = sqrt(distance).toFloat(),
-                color = waypoint.icon().color.orElse(config.constantColor),
+            ret.add(MarkerPosition(
+                location = RelativePlayerLocation(
+                    playerUuid = uuid,
+                    direction = directionVector,
+                    distance = sqrt(distance).toFloat(),
+                    color = waypoint.icon().color.orElse(config.constantColor),
+                ),
+                projectionOrigin = null,
             ))
         }
         return ret
